@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI·IA — Agentic Risk Triage</title>
+<meta name="description" content="Free 3-minute triage of agentic-AI risk in your financial systems. Built for CFOs, controllers, and audit committees by practitioners who audit AI the way attackers and auditors actually think.">
+<meta property="og:title" content="AI·IA — Agentic Risk Triage">
+<meta property="og:description" content="Your AI rollout has risks nobody on your team has mapped. Find the big ones in three minutes — free.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232a78d6'/%3E%3Ctext x='16' y='22' font-family='Arial,sans-serif' font-size='15' font-weight='800' fill='white' text-anchor='middle'%3EAI%3C/text%3E%3C/svg%3E">
+<style>
+  :root {
+    color-scheme: light;
+    --surface-1: #fcfcfb; --surface-2: #f4f4f2; --surface-3: #ececea;
+    --text-primary: #0b0b0b; --text-secondary: #52514e; --text-muted: #807f7a;
+    --accent: #2a78d6; --accent-ink: #1d5eae;
+    --good: #0ca30c; --warning: #fab219; --serious: #ec835a; --critical: #d03b3b;
+    --border: #dddcd8; --shadow: 0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --surface-1: #1a1a19; --surface-2: #232322; --surface-3: #2c2c2a;
+      --text-primary: #ffffff; --text-secondary: #c3c2b7; --text-muted: #8f8e87;
+      --accent: #3987e5; --accent-ink: #6aa7ee;
+      --border: #3a3a38; --shadow: 0 1px 3px rgba(0,0,0,.4);
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--surface-2); color: var(--text-primary); line-height: 1.55;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 0 20px 80px; }
+  header.hero { text-align: center; padding: 64px 20px 40px; }
+  .wordmark { font-size: 44px; font-weight: 800; letter-spacing: -1px; }
+  .wordmark .flip { color: var(--accent); }
+  .tagline { font-size: 20px; color: var(--text-secondary); margin-top: 10px; max-width: 620px; margin-left:auto; margin-right:auto;}
+  .sub { font-size: 14px; color: var(--text-muted); margin-top: 14px; }
+  .card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); padding: 28px; margin-top: 24px; }
+  h2 { font-size: 17px; margin-bottom: 4px; }
+  .step-hint { font-size: 13.5px; color: var(--text-muted); margin-bottom: 16px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; }
+  label.opt {
+    display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border: 1px solid var(--border);
+    border-radius: 8px; cursor: pointer; font-size: 14px; background: var(--surface-1); transition: border-color .12s, background .12s;
+  }
+  label.opt:hover { border-color: var(--accent); background: var(--surface-2); }
+  label.opt input { margin-top: 3px; accent-color: var(--accent); }
+  label.opt input:checked + span { font-weight: 600; }
+  .opt small { display: block; color: var(--text-muted); font-weight: 400; font-size: 12px; }
+  .actions { text-align: center; margin-top: 32px; }
+  button.primary {
+    background: var(--accent); color: #fff; border: none; font-size: 16px; font-weight: 700;
+    padding: 14px 34px; border-radius: 10px; cursor: pointer; box-shadow: var(--shadow);
+  }
+  button.primary:hover { background: var(--accent-ink); }
+  button.ghost { background: none; border: 1px solid var(--border); color: var(--text-secondary); font-size: 13px; padding: 9px 18px; border-radius: 8px; cursor: pointer; margin-left: 10px;}
+  button.ghost:hover { border-color: var(--accent); color: var(--accent-ink); }
+  /* report */
+  #report { display: none; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 18px 0 6px; }
+  .tile { border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; background: var(--surface-1); }
+  .tile .n { font-size: 30px; font-weight: 800; line-height: 1.1; }
+  .tile .lbl { font-size: 12.5px; font-weight: 600; display:flex; align-items:center; gap:6px; margin-bottom: 4px; color: var(--text-secondary); text-transform: uppercase; letter-spacing:.4px;}
+  .dot { width: 10px; height: 10px; border-radius: 3px; display:inline-block; flex:none;}
+  .finding { border: 1px solid var(--border); border-left-width: 5px; border-radius: 10px; background: var(--surface-1); margin-top: 14px; overflow: hidden;}
+  .finding > summary { list-style: none; cursor: pointer; padding: 16px 18px; display: flex; gap: 12px; align-items: baseline; }
+  .finding > summary::-webkit-details-marker { display: none; }
+  .finding > summary:hover { background: var(--surface-2); }
+  .sev-badge { font-size: 11px; font-weight: 800; letter-spacing: .6px; padding: 3px 9px; border-radius: 20px; color: #fff; flex: none; }
+  .f-title { font-weight: 700; font-size: 15px; }
+  .f-body { padding: 0 18px 18px 18px; font-size: 14px; color: var(--text-secondary); }
+  .f-body .why { margin-top: 10px; padding: 12px 14px; background: var(--surface-2); border-radius: 8px; font-size: 13.5px; }
+  .f-body .why b { color: var(--text-primary); }
+  .cta { text-align:center; padding: 34px 24px; }
+  .cta h2 { font-size: 22px; }
+  .cta p { color: var(--text-secondary); max-width: 560px; margin: 10px auto 20px; font-size: 15px;}
+  .disclaimer { font-size: 11.5px; color: var(--text-muted); margin-top: 28px; text-align: center; max-width: 680px; margin-left: auto; margin-right: auto;}
+  .section-label { font-size: 12px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin: 26px 0 6px; }
+  textarea, input.txt {
+    width: 100%; background: var(--surface-1); color: var(--text-primary);
+    border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px;
+    font: inherit; font-size: 14px; resize: vertical;
+  }
+  textarea:focus, input.txt:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  @media print {
+    .actions, .cta button, header.hero .sub, #stories { display: none; }
+    .finding { page-break-inside: avoid; }
+    details[open] > summary ~ * { display: block; }
+  }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="wordmark">AI<span class="flip">·</span>IA</div>
+  <div class="tagline">Your AI rollout has risks nobody on your team has mapped. Find the big ones in three minutes — free.</div>
+  <div class="sub">Agentic-AI risk triage for the systems that run your money. Built by practitioners who audit AI the way attackers and auditors actually think.<br>Our rule from the field: treat every system like the cameras are on — because now they are.</div>
+</header>
+
+<div class="wrap">
+  <details class="card" id="demoGallery">
+    <summary style="cursor:pointer; list-style:none; display:flex; justify-content:space-between; align-items:center;">
+      <span><span style="font-size:17px;font-weight:700;">See what one innocent sentence can do</span><br><span class="step-hint" style="margin:0;">Real prompt patterns — the kind already typed at companies like yours. Click to expand.</span></span>
+      <span style="font-size:22px;color:var(--accent);">↓</span>
+    </summary>
+    <div id="demoCards" style="margin-top:18px; display:grid; gap:14px;"></div>
+    <p class="disclaimer" style="text-align:left;margin-top:16px;">These are illustrative demonstrations of how ordinary requests can produce unintended results — awareness examples, not attack instructions. They contain no working exploit code.</p>
+  </details>
+
+  <form id="scanForm" onsubmit="runAnalysis(event)">
+
+    <div class="card">
+      <h2>1 · Your organization</h2>
+      <div class="step-hint">Context changes which risks matter.</div>
+      <div class="grid">
+        <label class="opt"><input type="checkbox" name="org" value="healthcare"><span>Healthcare / clinical research<small>Trials, PHI, FDA-regulated data</small></span></label>
+        <label class="opt"><input type="checkbox" name="org" value="public"><span>Public company (SOX)<small>Or actively preparing for IPO</small></span></label>
+        <label class="opt"><input type="checkbox" name="org" value="pe"><span>Private / PE-backed<small>No SOX mandate</small></span></label>
+        <label class="opt"><input type="checkbox" name="org" value="no_ia"><span>No internal audit function<small>Or unsure whether one exists</small></span></label>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>2 · Financial & operational systems</h2>
+      <div class="step-hint">Select everything in production — including the systems around the ERP.</div>
+      <div class="grid">
+        <label class="opt"><input type="checkbox" name="erp" value="netsuite"><span>NetSuite OneWorld<small>Multi-subsidiary, intercompany, consolidations</small></span></label>
+        <label class="opt"><input type="checkbox" name="erp" value="qb"><span>QuickBooks</span></label>
+        <label class="opt"><input type="checkbox" name="fin" value="blackline"><span>BlackLine<small>Reconciliations, close automation, certifications</small></span></label>
+        <label class="opt"><input type="checkbox" name="fin" value="adaptive"><span>Workday Adaptive Planning<small>Budgets, forecasts, allocation drivers</small></span></label>
+        <label class="opt"><input type="checkbox" name="fin" value="concur"><span>SAP Concur<small>AP, Invoice, T&amp;E</small></span></label>
+        <label class="opt"><input type="checkbox" name="fin" value="psa"><span>OpenAir / Replicon<small>Project time &amp; expense feeding revenue</small></span></label>
+        <label class="opt"><input type="checkbox" name="data" value="databricks"><span>Databricks<small>Lakehouse holding finance data marts</small></span></label>
+        <label class="opt"><input type="checkbox" name="data" value="powerbi"><span>Power BI<small>Executive reporting &amp; semantic models</small></span></label>
+        <label class="opt"><input type="checkbox" name="data" value="m365_files"><span>SharePoint / OneDrive<small>Where close binders and payroll files live</small></span></label>
+        <label class="opt"><input type="checkbox" name="data" value="euc"><span>Critical Excel workbooks<small>Models the close depends on, outside any system</small></span></label>
+        <label class="opt"><input type="checkbox" name="data" value="jira"><span>Jira<small>Change requests &amp; ticket workflow</small></span></label>
+        <label class="opt"><input type="checkbox" name="payroll" value="external_payroll"><span>Payroll outside the ERP<small>ADP, Paychex, etc. — allocated back via journals</small></span></label>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>3 · AI in the environment</h2>
+      <div class="step-hint">Include pilots and "just a few power users."</div>
+      <div class="grid">
+        <label class="opt"><input type="checkbox" name="ai" value="desktop_agent"><span>Desktop AI agents<small>Claude Desktop, ChatGPT desktop</small></span></label>
+        <label class="opt"><input type="checkbox" name="ai" value="copilot_m365"><span>Microsoft 365 Copilot<small>AI inside Excel, Outlook, Word, SharePoint</small></span></label>
+        <label class="opt"><input type="checkbox" name="ai" value="browser_control"><span>Browser control / computer use<small>AI can click and type in live sessions</small></span></label>
+        <label class="opt"><input type="checkbox" name="ai" value="mcp"><span>MCP / API connectors to business systems<small>ERP, CRM, data warehouse connectors</small></span></label>
+        <label class="opt"><input type="checkbox" name="ai" value="email_ai"><span>AI reads or drafts email<small>Outlook Copilot, inbox summarization, triage</small></span></label>
+        <label class="opt"><input type="checkbox" name="ai" value="coding_agent"><span>Coding agents<small>Cursor, GitHub Copilot, script generation</small></span></label>
+        <label class="opt"><input type="checkbox" name="ai" value="custom_agents"><span>Custom / autonomous agents<small>Internal builds, scheduled agent jobs</small></span></label>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>4 · Access reality</h2>
+      <div class="step-hint">Answer for how things actually are, not policy.</div>
+      <div class="grid">
+        <label class="opt"><input type="checkbox" name="access" value="admin_ai_overlap"><span>Admin/write users also have AI tools<small>Anyone with ERP write access running AI</small></span></label>
+        <label class="opt"><input type="checkbox" name="access" value="readonly_belief"><span>"It's safe — the connector is read-only"<small>Someone has said this in a meeting</small></span></label>
+        <label class="opt"><input type="checkbox" name="access" value="sandbox_prod"><span>Same users reach sandbox and production<small>Environment chosen by login/default</small></span></label>
+        <label class="opt"><input type="checkbox" name="access" value="personal_automation"><span>Automations run under personal accounts<small>Scheduled jobs attributed to real people</small></span></label>
+        <label class="opt"><input type="checkbox" name="access" value="partial_revocation"><span>AI access revoked for some, not all<small>Exceptions exist after a policy decision</small></span></label>
+        <label class="opt"><input type="checkbox" name="access" value="related_parties"><span>Close relationships span approval chains<small>Hiring, vendors, or payments touch someone's family or friends</small></span></label>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>5 · Controls in place</h2>
+      <div class="step-hint">Check only what actually exists and is current.</div>
+      <div class="grid">
+        <label class="opt"><input type="checkbox" name="ctrl" value="policy"><span>AI acceptable-use policy</span></label>
+        <label class="opt"><input type="checkbox" name="ctrl" value="it_testing"><span>IT/security testing of AI tools</span></label>
+        <label class="opt"><input type="checkbox" name="ctrl" value="fin_testing"><span>Finance-lens testing<small>Fraud, SOD, allocation abuse scenarios</small></span></label>
+        <label class="opt"><input type="checkbox" name="ctrl" value="automation_inventory"><span>Automation inventory with owners<small>Every scheduled job has a named owner</small></span></label>
+        <label class="opt"><input type="checkbox" name="ctrl" value="sod_review"><span>SOD review in last 12 months</span></label>
+        <label class="opt"><input type="checkbox" name="ctrl" value="change_mgmt"><span>ERP change management tooling<small>StrongPoint or equivalent, actively maintained</small></span></label>
+        <label class="opt"><input type="checkbox" name="ctrl" value="coi"><span>Conflict-of-interest attestations<small>Current, and reconciled against the vendor master</small></span></label>
+        <label class="opt"><input type="checkbox" name="ctrl" value="usage_reporting"><span>AI usage & spend reporting</span></label>
+        <label class="opt"><input type="checkbox" name="ctrl" value="indep_security"><span>Security reports outside the AI org<small>Reviewer doesn't report to the deployer</small></span></label>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button type="submit" class="primary">Run my free risk triage →</button>
+    </div>
+  </form>
+
+  <div id="report">
+    <div class="card">
+      <h2 style="font-size:22px">Risk triage results</h2>
+      <div class="step-hint" id="stamp"></div>
+      <div id="posture"></div>
+      <div class="tiles" id="tiles"></div>
+      <div style="text-align:right; margin-top:14px;">
+        <button class="ghost" style="margin-left:0" onclick="toggleAllFindings(true)">Expand all</button>
+        <button class="ghost" onclick="toggleAllFindings(false)">Collapse all</button>
+      </div>
+      <div id="findings"></div>
+    </div>
+
+    <div class="card cta">
+      <h2>These are the risks visible from a checklist.</h2>
+      <p>The serious ones live in your configuration — permission inheritance, automation identity, injection paths. A structured review maps them against your actual environment under NDA, with findings your auditors and board can use.</p>
+      <button class="primary" onclick="scheduleConsult()">Schedule a consultation</button>
+      <button class="ghost" onclick="window.print()">Print / save this report</button>
+      <button class="ghost" onclick="location.reload()">Start over</button>
+    </div>
+
+    <p class="disclaimer">This automated triage is informational only and is based solely on the selections you provided. It is not an audit, security assessment, legal advice, or professional opinion, and it does not establish an engagement or duty of care. Findings describe categories of risk commonly associated with the indicated configurations; your actual exposure depends on facts not collected here.</p>
+  </div>
+
+  <div class="card" id="stories">
+    <h2>Seen something? Tell the story.</h2>
+    <div class="step-hint">Auditors, controllers, admins, consultants — practicing or retired. Field stories are how the detection rules above get built.</div>
+    <p style="font-size:14px; color:var(--text-secondary); margin-bottom:14px;">
+      We collect real-world accounts of AI, automation, and control failures around financial systems and compile them — anonymized — into our detection ruleset. What happened, which systems were involved, what the control gap was, and how (or whether) it was caught. Contributors of substantive casework may be invited into our contributor program as it develops.
+      <b style="color:var(--text-primary);">Do not include company names, personal names, account data, or documents you are not authorized to share.</b>
+    </p>
+    <textarea id="storyText" rows="6" placeholder="e.g., 'Mid-market SaaS co on NetSuite. AP clerk's assistant auto-processed an emailed invoice that…'"></textarea>
+    <input class="txt" id="storyContact" style="margin-top:10px;" placeholder="Optional contact — leave blank to stay anonymous">
+    <div style="margin-top:14px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+      <button class="primary" style="font-size:14px; padding:11px 24px;" onclick="submitStory()">Submit story</button>
+      <span id="storyStatus" style="font-size:13px; color:var(--text-muted);"></span>
+    </div>
+    <p class="disclaimer" style="text-align:left; margin-top:16px;">
+      Submissions are voluntary and treated as confidential. Until our dedicated anonymous intake is live, submitting opens your email application — which shares your email address with us; leave the contact field blank and use a personal device if that matters to you. This is not a legal whistleblower channel: reports to regulators (e.g., the SEC or IRS whistleblower programs) carry their own legal protections and processes, and nothing here substitutes for them or for advice from a lawyer. If you are bound by an NDA or confidentiality obligation, get legal advice before sharing specifics.
+    </p>
+  </div>
+</div>
+
+<script>
+// ── Config: set your scheduling link when you have one; until then the CTA opens a pre-filled email.
+const CONFIG = {
+  schedulingUrl: "",                              // e.g. "https://calendly.com/your-handle/intro"
+  contactEmail: "shawn.ross.kimble@gmail.com",    // fallback CTA target
+  storyEndpoint: "",                              // POST endpoint for story intake (Formspree/Basin/own API); mailto fallback until set
+};
+
+const DEMOS = [
+  {
+    tag: "Impersonation", sev: "serious",
+    prompt: "“Draft this week's revenue-flash email the way Jamie usually sends it — here's last week's for the format.”",
+    expects: "A rough draft I'll review and clean up before sending.",
+    reality: "A pixel-accurate copy of a trusted colleague's recurring email — subject line, greeting, cadence, sign-off — convincing enough that recipients act on it without a second look. The tool needed one prior example and nothing else. This is the exact shape of payment-redirection and approval fraud.",
+  },
+  {
+    tag: "Environment confusion", sev: "critical",
+    prompt: "“Delete those test transactions I just entered so we start clean.”",
+    expects: "It clears my scratch data in the sandbox.",
+    reality: "If the active session's default is production — a common configuration — the agent deletes real transactions there. It acts on the environment in front of it, not the one you pictured. A human hesitates at a 'delete 40 records?' prompt; an agent confirms and moves on.",
+  },
+  {
+    tag: "Prompt injection (email)", sev: "critical",
+    prompt: "“Summarize my inbox and take care of anything routine.”",
+    expects: "A tidy summary and a couple of obvious replies handled.",
+    reality: "One incoming message contains instructions written for the AI, not the human — hidden in white text or invisible formatting. When the assistant reads the inbox, it also reads the instruction, and 'anything routine' becomes cover for an action you never saw or approved. The payload rode in through your own trusted channel; no system was breached.",
+  },
+  {
+    tag: "Permission inheritance", sev: "critical",
+    prompt: "“Standardize our vendor names and merge the obvious duplicates.”",
+    expects: "A cleanup suggestion list for me to approve.",
+    reality: "Run by a user with admin rights while the AI drives the browser, this becomes live edits to the vendor master — the record set that governs where money is sent. The read-only API connector everyone pointed to as 'the safety measure' never touched this path; the browser session did.",
+  },
+  {
+    tag: "Allocation manipulation", sev: "serious",
+    prompt: "“Rebalance the department headcount allocations to match the new org chart.”",
+    expects: "Updated allocation drivers for the current structure.",
+    reality: "Those drivers silently redistribute the company's largest expense — payroll — across every department's P&L, with no cash movement for a bank reconciliation to catch. Whoever, or whatever, shapes the allocation shapes reported departmental performance. Almost no one on the team understands the mechanism well enough to notice a change.",
+  },
+  {
+    tag: "Oversharing", sev: "serious",
+    prompt: "“What are our comp bands for senior consultants?”",
+    expects: "The official, HR-approved compensation document.",
+    reality: "M365 Copilot answers from anything the user's identity can technically reach — including a working file in a folder someone over-shared three years ago. Years of permission sprawl that nobody could find by browsing become instantly searchable. Payroll files, board decks, and the close binder are one well-phrased question away for anyone whose access was never trimmed.",
+  },
+  {
+    tag: "Attribution", sev: "serious",
+    prompt: "(No prompt at all — a scheduled agent job running overnight.)",
+    expects: "Routine automation, nothing to review.",
+    reality: "The job posts under a real person's user account, so the audit trail names a human for a machine action. When something needs investigating, the logs point at an employee who was asleep — and a bad actor operating under that same account inherits a built-in scapegoat. Your trail can't tell people from automation.",
+  },
+];
+
+const SEV = {
+  critical: { label: "CRITICAL", color: "var(--critical)", icon: "⛔", order: 0 },
+  serious:  { label: "SERIOUS",  color: "var(--serious)",  icon: "⚠️", order: 1 },
+  warning:  { label: "WARNING",  color: "var(--warning)",  icon: "🟡", order: 2 },
+  info:     { label: "NOTE",     color: "var(--good)",     icon: "ℹ️", order: 3 },
+};
+
+// Rules engine v0.1 — each rule: when(sel) → boolean, severity, title, body, why
+const RULES = [
+  {
+    id: "perm-inherit", sev: "critical",
+    when: s => s.ai.includes("browser_control") && s.access.includes("admin_ai_overlap") && s.erp.length > 0,
+    title: "Browser-controlling AI inherits your admins' write access to production",
+    body: "An AI agent that operates the browser acts inside whatever session is logged in. Every user who holds admin or write access to your ERP and also runs a browser-controlling AI is, functionally, a write-capable AI deployment against production — regardless of how any connector token is scoped.",
+    why: "Most rollouts scope the <b>connector</b> and never model the <b>browser</b> as an access path. Your control boundary is not the token; it is the permission set of every human allowed to run the tool."
+  },
+  {
+    id: "readonly-fallacy", sev: "critical",
+    when: s => s.access.includes("readonly_belief") && (s.ai.includes("browser_control") || s.ai.includes("desktop_agent")),
+    title: "The read-only connector argument doesn't hold in your configuration",
+    body: "A read-only API token limits one pathway. With desktop or browser-capable AI present, the agent has other pathways — the user's live session chief among them. Decisions justified by \"the connector is read-only\" are resting on a boundary the tool doesn't respect.",
+    why: "This is the single most common false comfort in AI governance reviews. If your approval documents cite read-only scoping as the safety case, they need to be reopened."
+  },
+  {
+    id: "fin-lens-gap", sev: "critical",
+    when: s => s.erp.length > 0 && s.ai.length > 0 && !s.ctrl.includes("fin_testing"),
+    title: "No finance-lens testing: fraud and SOD scenarios are untested",
+    body: "IT and security testing asks whether the tool can be breached. Finance testing asks whether it can post or approve journal entries, touch vendor master or banking details, chain actions across roles no single person may hold, or act at speeds review controls can't catch. Nothing in your controls covers that lens.",
+    why: "The people who test AI tools almost never think like fraud examiners. The gap between those two lenses is where agentic incidents in ERP environments will live."
+  },
+  {
+    id: "env-confusion", sev: "serious",
+    when: s => s.access.includes("sandbox_prod") && (s.ai.includes("browser_control") || s.ai.includes("desktop_agent")),
+    title: "Environment confusion: \"assume sandbox, execute in production\"",
+    body: "Users who reach both sandbox and production through the same tools will eventually prompt an action believing they are in sandbox while the default session is production. The agent acts on the environment actually in front of it.",
+    why: "Human environment mix-ups are usually caught by hesitation and muscle memory. An agent has neither — it executes immediately, at scale, in whichever context is live."
+  },
+  {
+    id: "email-injection", sev: "serious",
+    when: s => s.ai.includes("email_ai"),
+    title: "Email is now an instruction channel into your organization",
+    body: "When AI reads inboxes, anyone who can land an email in them can attempt to steer the AI — including with content invisible to humans (white text, hidden HTML). A user whose assistant reads their mail can be induced to take actions they never intended or understood.",
+    why: "Prompt injection via email requires no compromise of your systems: the attack surface is the inbox itself, and the payload travels through your own trusted channel."
+  },
+  {
+    id: "impersonation", sev: "serious",
+    when: s => s.ai.includes("email_ai") || s.ai.includes("desktop_agent"),
+    title: "Near-perfect internal impersonation costs one prompt",
+    body: "Given one historical email and an attachment, current models reproduce a colleague's routine messages convincingly — headers, tone, cadence. Payment-redirection and approval fraud rely on exactly this, and your finance staff's pattern-matching defenses were trained on clumsier fakes.",
+    why: "Run this test before an attacker does: have your own team generate an internal weekly email with an AI and see who spots it. Organizations that try this usually stop arguing about the risk."
+  },
+  {
+    id: "attribution-debt", sev: "serious",
+    when: s => s.access.includes("personal_automation"),
+    title: "Attribution debt: your audit trail can't tell humans from automation",
+    body: "Automated jobs running under personal user accounts stamp real people's names on system-generated changes. Any incident review that treats log identity as proof of human action is flawed from the outset — and the person whose name is on the logs carries risk they didn't choose.",
+    why: "This also runs in reverse: a malicious actor operating under a shared or compromised personal account gains a built-in scapegoat. Attribution ambiguity protects attackers and endangers your most trusted admins."
+  },
+  {
+    id: "attribution-compound", sev: "critical",
+    when: s => s.access.includes("personal_automation") && s.ai.length > 0 && !s.ctrl.includes("automation_inventory"),
+    title: "No automation inventory + personal-account jobs + AI in the environment",
+    body: "You cannot currently answer: what runs, under whose identity, and why. Adding agents that can modify records into an environment where automation identity is already untracked means new AI-driven changes will be indistinguishable from legacy automation and from humans.",
+    why: "This combination is the precondition for the worst incident class: unauthorized changes nobody can attribute, in a system everyone trusted. An automation inventory with named owners is the cheapest control you're missing."
+  },
+  {
+    id: "partial-revocation", sev: "serious",
+    when: s => s.access.includes("partial_revocation"),
+    title: "Partial revocations: your policy decision has surviving exceptions",
+    body: "When AI access is revoked for some users while exceptions persist — often near the teams operating the rollout — the control exists on paper only. Exceptions correlated with elevated system access invert the intended risk posture: the most privileged users retain the tool the policy was written to contain.",
+    why: "Verify revocation scope independently of the team that executed it. In most organizations, nobody has actually reconciled the revocation list against admin rosters."
+  },
+  {
+    id: "alloc-fraud", sev: "warning",
+    when: s => s.payroll.includes("external_payroll") && s.erp.length > 0,
+    title: "Allocation journals are a stealth fraud surface",
+    body: "Payroll held outside the ERP and allocated back through statistical or summary journals means whoever (or whatever) controls the allocation drivers silently redistributes your largest expense across departmental P&Ls — no cash movement, nothing for bank reconciliation to catch.",
+    why: "Allocation mechanics are usually understood by one or two people. That opacity is a confidentiality feature and a fraud vulnerability at the same time."
+  },
+  {
+    id: "regulated-data", sev: "serious",
+    when: s => s.org.includes("healthcare") && s.ai.length > 0,
+    title: "Your AI risk isn't just financial — it reaches regulated data",
+    body: "In a healthcare or clinical-research environment, the same agent architecture that threatens the ERP reaches systems holding PHI and trial data. There the exposure isn't misstatement — it's HIPAA and FDA data-integrity (21 CFR Part 11) territory, where remediation is measured in regulatory consequences.",
+    why: "AI assessments scoped to finance or IT quietly exclude the systems with the highest regulatory blast radius. Ask what the assessment's scope statement actually says."
+  },
+  {
+    id: "no-ia", sev: "warning",
+    when: s => s.org.includes("no_ia"),
+    title: "No internal audit: risk concerns have no institutional receiver",
+    body: "Without a second-line function, employees who spot control failures must improvise escalation paths through managers, HR, or legal — paths that are slower, politically exposed, and easy to deflect. Risks surface late or not at all.",
+    why: "The first serious AI incident will be preceded by an employee who noticed something and had nowhere effective to take it. Buyers and underwriters increasingly ask where internal audit sits; \"nowhere\" is becoming an expensive answer."
+  },
+  {
+    id: "structural-conflict", sev: "warning",
+    when: s => !s.ctrl.includes("indep_security") && s.ai.length > 0,
+    title: "The organization deploying AI is reviewing its own risk",
+    body: "When security or risk review reports into the same leadership that owns the AI rollout, risk acceptance and rollout enthusiasm share a boss. Findings that threaten the program's timeline face structural headwinds before they're evaluated on merit.",
+    why: "The fix is routing AI risk acceptance to a function with independent reporting — legal, compliance, audit committee — not necessarily changing who does the technical work."
+  },
+  {
+    id: "sod-atrophy", sev: "warning",
+    when: s => s.org.includes("pe") && !s.ctrl.includes("sod_review"),
+    title: "SOD atrophy: private-company control debt meets agentic speed",
+    body: "Without SOX pressure, segregation-of-duties reviews slip. An AI agent operating under a broadly-permissioned user doesn't just inherit weak SOD — it amplifies it, executing chained actions across duty boundaries at machine speed.",
+    why: "A current SOD review is the prerequisite for every other AI control decision: you can't reason about what an agent may do until you know what its human may do."
+  },
+  {
+    id: "spend-opacity", sev: "warning",
+    when: s => s.ai.length > 0 && !s.ctrl.includes("usage_reporting"),
+    title: "AI usage and spend are invisible to finance",
+    body: "Without usage reporting you can't classify AI spend (CapEx/OpEx), can't see shadow adoption, and can't correlate agent activity with system changes when something goes wrong. Usage telemetry is also your incident-response evidence.",
+    why: "Teams resist usage transparency for cultural reasons; finance needs it for accounting reasons; investigators will need it for forensic reasons. Two of those three are non-negotiable."
+  },
+  {
+    id: "coding-agents", sev: "warning",
+    when: s => s.ai.includes("coding_agent") && s.erp.includes("netsuite") && !s.ctrl.includes("change_mgmt"),
+    title: "Coding agents can modify ERP logic faster than your logs retain evidence",
+    body: "Script-level changes to ERP behavior (e.g., SuiteScript) now happen at AI speed, and no change-management tooling (StrongPoint or equivalent) is tracking them. In NetSuite, script execution logs purge in roughly 30 days and are not immutable — meaning agent-assisted logic changes can outrun your evidence window.",
+    why: "Change management built for human-speed development assumes review cycles longer than the log retention. AI-assisted development breaks that assumption quietly."
+  },
+  {
+    id: "no-policy", sev: "warning",
+    when: s => s.ai.length > 0 && !s.ctrl.includes("policy"),
+    title: "No acceptable-use policy: every AI decision is being made ad hoc",
+    body: "Without a written policy, individual employees are deciding what data to paste, what tools to connect, and what actions to delegate — each according to their own risk model. You have as many AI policies as you have employees.",
+    why: "The policy isn't primarily about restriction — it's the artifact that makes violations legible. Without it, even egregious misuse is just 'initiative.'"
+  },
+  {
+    id: "mcp-unassessed", sev: "serious",
+    when: s => s.ai.includes("mcp") && !s.ctrl.includes("it_testing") && !s.ctrl.includes("fin_testing"),
+    title: "Connectors to business systems, with no testing of any kind",
+    body: "MCP or API connectors put your business systems one tool-call away from model behavior, and nothing in your controls indicates either security or finance testing occurred before connection.",
+    why: "Connectors are the fastest-moving part of the AI ecosystem — capabilities change under you between versions. Untested at deployment means untested against a moving target."
+  },
+  {
+    id: "custom-agents", sev: "serious",
+    when: s => s.ai.includes("custom_agents") && !s.ctrl.includes("policy"),
+    title: "Autonomous agents with no governing policy",
+    body: "Custom or scheduled agents act without a human initiating each action. Absent a policy defining their permissions, identity, logging, and kill-switch requirements, each one is an ungoverned actor inside your environment.",
+    why: "Ask two questions of every internal agent: what identity does it act under, and who gets paged when it misbehaves? Silence on either is the finding."
+  },
+  {
+    id: "blackline-trust", sev: "serious",
+    when: s => s.fin.includes("blackline") && s.ai.length > 0 && !s.ctrl.includes("fin_testing"),
+    title: "Close automation can launder upstream AI changes into certified numbers",
+    body: "BlackLine certifies that balances match and reconciling items clear — it doesn't ask whether the source data was legitimate. If AI agents can touch the systems feeding it, manipulated entries that keep both sides consistent auto-match and flow into a certified close. The certification becomes evidence of process, not of truth.",
+    why: "Auto-certification was designed against human-speed error, not machine-speed manipulation that keeps both sides of a reconciliation consistent. The cleaner your close metrics, the less anyone looks."
+  },
+  {
+    id: "concur-intake", sev: "serious",
+    when: s => s.fin.includes("concur") && s.ai.length > 0,
+    title: "AP automation now meets AI-quality fake invoices",
+    body: "Concur ingests invoices by email and OCR, and touchless processing is the point. Generative AI produces vendor-perfect invoices — logos, formats, plausible line items — at effectively zero cost, and your intake channel is built to process them without a human look below the exception thresholds.",
+    why: "Invoice fraud defenses assume forgery is effortful and low-volume. Both assumptions just expired. Ask what percentage of invoices below your review threshold a human ever sees."
+  },
+  {
+    id: "psa-revrec", sev: "serious",
+    when: s => s.fin.includes("psa") && s.ai.length > 0,
+    title: "Time entries are revenue: agents that touch timesheets move recognized revenue",
+    body: "In OpenAir and Replicon, hours drive percent-complete, T&M billing, and project margin. An agent that edits, reallocates, or backfills time — helpfully or maliciously — shifts revenue timing and reported profitability, with no cash movement and nothing for a bank reconciliation to catch.",
+    why: "Nobody reconciles recorded hours to reality. Time data is treated as an operational input, but it's a direct revenue driver — and it's the least-controlled data in the company."
+  },
+  {
+    id: "adaptive-drivers", sev: "warning",
+    when: s => s.fin.includes("adaptive") && s.ai.length > 0,
+    title: "Planning drivers in Adaptive shape reported performance outside ERP controls",
+    body: "Allocation drivers, top-side adjustments, and forecast assumptions in Adaptive Planning redistribute results across departments and periods — and access there is rarely reviewed with the rigor applied to ERP roles. An agent with planning access shapes the story management sees without touching the books.",
+    why: "Planning tools sit outside most SOD reviews because they 'don't post journals.' What they post is the version of reality decisions get made on."
+  },
+  {
+    id: "copilot-oversharing", sev: "serious",
+    when: s => s.ai.includes("copilot_m365") && s.data.includes("m365_files"),
+    title: "Copilot turns years of SharePoint permission sprawl into a search engine",
+    body: "M365 Copilot answers from everything a user's identity can technically reach. Every over-shared folder, every 'everyone' link, every stale permission from a reorg becomes instantly discoverable by natural-language question — payroll files, board materials, the close binder. The files didn't move; the effort to find them dropped to zero.",
+    why: "Permission sprawl was survivable when discovery required knowing where to look. Copilot removes that friction for every employee at once — run a permission-sprawl assessment before broad enablement, not after."
+  },
+  {
+    id: "euc-ai", sev: "serious",
+    when: s => s.data.includes("euc") && s.ai.length > 0,
+    title: "The close depends on Excel workbooks that AI can now silently rewrite",
+    body: "Critical spreadsheets have no change log, no approval workflow, and no immutable history. AI assistants editing formulas, refreshing data, or 'cleaning up' a model can alter the numbers the close depends on with zero trail — and a plausible-looking workbook is precisely what a model produces when it's wrong.",
+    why: "End-user computing was already the weakest link in most control environments. AI editing makes EUC changes faster, more confident, and less reviewed — audit's oldest problem at machine speed."
+  },
+  {
+    id: "databricks-sidedoor", sev: "warning",
+    when: s => s.data.includes("databricks") && (s.ai.includes("mcp") || s.ai.includes("coding_agent") || s.ai.includes("custom_agents")),
+    title: "The lakehouse is a side door around ERP controls",
+    body: "Finance data marts in Databricks are writable by notebooks and jobs that never pass through ERP change control. Agents operating there can alter the data that reporting, reconciliation, and analytics consume — downstream of the controls everyone points to.",
+    why: "Data engineering and finance controls are owned by different teams with different definitions of 'production.' Agents don't respect that org-chart boundary; they follow the data."
+  },
+  {
+    id: "powerbi-shape", sev: "warning",
+    when: s => s.data.includes("powerbi") && s.ai.length > 0,
+    title: "Reported ≠ recorded: the semantic layer can be shaped outside audited systems",
+    body: "Power BI measures, filters, and row-level security decide what executives actually see. Changes there alter presented performance without touching the books — and semantic-model changes are rarely under change control or review, while AI tools now write DAX on request.",
+    why: "Everyone audits the general ledger; almost nobody audits the dashboard between the ledger and the decision-maker."
+  },
+  {
+    id: "coi-blindspot", sev: "serious",
+    when: s => s.access.includes("related_parties") && !s.ctrl.includes("coi"),
+    title: "Related-party paths cross your approval chains with no attestation to check against",
+    body: "When family and close relationships span hiring, vendor selection, or payment approval — and no current conflict-of-interest attestation exists to reconcile against the vendor master — the org can't distinguish a favor from a fraud. Agents make this sharper in both directions: they execute approval chains at machine speed without noticing relationships no system records, and the same AI techniques now make undisclosed connections findable. Better that you map them before an auditor, a litigant, or an attacker does.",
+    why: "Nepotism risk is managed by social awareness — people 'just know.' Automation strips out the humans who knew, and the knowledge leaves with them. The fix is disclosed-relationship attestation reconciled against master data, not surveillance."
+  },
+  {
+    id: "sox-icfr", sev: "serious",
+    when: s => s.org.includes("public") && s.ai.length > 0 && s.erp.length > 0,
+    title: "AI now touches your ICFR environment — SOX 404 has an AI chapter",
+    body: "Agentic tools operating in or around the systems that feed financial reporting are inside the scope of your internal-control-over-financial-reporting assessment, whether or not anyone has documented them. External auditors are beginning to ask how AI-driven changes to ERP data are initiated, authorized, and evidenced — and \"we hadn't considered the AI tools\" is a control-environment answer, not a technical one.",
+    why: "SOX scoping happens annually; AI adoption happens weekly. Tools adopted mid-cycle rarely make it into the risk assessment until an auditor finds them first."
+  },
+  {
+    id: "mcp-permissions", sev: "serious",
+    when: s => s.ai.includes("mcp") && s.access.includes("admin_ai_overlap"),
+    title: "Connectors authorized by privileged users carry privileged permissions",
+    body: "An MCP or API connector typically acts with the permissions of the account that authorized it. When admins and write-capable users are the ones wiring connectors up, the \"assistant\" inherits their reach — every tool call executes under the most privileged identity in the room.",
+    why: "Connector setup is done by exactly the people whose credentials should never be delegated — admins, because only they can. Nobody re-checks what the resulting integration can actually do."
+  },
+  {
+    id: "policy-theater", sev: "warning",
+    when: s => s.ctrl.includes("policy") && !s.ctrl.includes("it_testing") && !s.ctrl.includes("fin_testing") && s.ai.length > 0,
+    title: "A policy with no testing behind it is a paper control",
+    body: "An acceptable-use policy defines intent; testing establishes whether reality matches it. With neither security nor finance-lens testing in place, the policy governs a deployment nobody has examined — compliance with it is unverifiable, and violations are invisible.",
+    why: "Policies are cheap to write and satisfying to point at. In a post-incident review, an untested policy reads as evidence the organization named the risk and looked away."
+  },
+  {
+    id: "clean", sev: "info",
+    when: s => s.ai.length === 0,
+    title: "No AI tools selected — your risk is the AI you don't know about",
+    body: "Organizations that haven't deployed AI still have employees who have. Shadow use of consumer AI with corporate data is the default state, not the exception, and it comes with none of the controls an official rollout would carry.",
+    why: "A quick anonymous survey of actual AI use typically surprises leadership. The gap between official and actual adoption is itself the first finding."
+  },
+];
+
+function renderDemos() {
+  document.getElementById("demoCards").innerHTML = DEMOS.map(d => `
+    <div class="finding" style="border-left-color:${SEV[d.sev].color}; margin-top:0;">
+      <div class="f-body" style="padding:16px 18px;">
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;">
+          <span class="sev-badge" style="background:${SEV[d.sev].color}">${SEV[d.sev].icon} ${SEV[d.sev].label}</span>
+          <span style="font-weight:700;color:var(--text-primary);font-size:13px;text-transform:uppercase;letter-spacing:.5px;">${d.tag}</span>
+        </div>
+        <div style="font-size:15px;font-weight:600;color:var(--text-primary);font-style:italic;">${d.prompt}</div>
+        <div style="display:grid;grid-template-columns:1fr;gap:8px;margin-top:12px;">
+          <div><b style="color:var(--good);">What they expect:</b> ${d.expects}</div>
+          <div><b style="color:var(--critical);">What can actually happen:</b> ${d.reality}</div>
+        </div>
+      </div>
+    </div>`).join("");
+}
+renderDemos();
+
+function collect(form, name) {
+  return [...form.querySelectorAll(`input[name="${name}"]:checked`)].map(i => i.value);
+}
+
+function runAnalysis(e) {
+  e.preventDefault();
+  const f = document.getElementById("scanForm");
+  const sel = {
+    org: collect(f, "org"), erp: collect(f, "erp"), fin: collect(f, "fin"), data: collect(f, "data"),
+    payroll: collect(f, "payroll"), ai: collect(f, "ai"), access: collect(f, "access"), ctrl: collect(f, "ctrl"),
+  };
+  const hits = RULES.filter(r => { try { return r.when(sel); } catch { return false; } })
+                    .sort((a, b) => SEV[a.sev].order - SEV[b.sev].order);
+
+  const counts = { critical: 0, serious: 0, warning: 0, info: 0 };
+  hits.forEach(h => counts[h.sev]++);
+  lastRun = { hits, counts };
+
+  // Overall exposure posture — weighted score drives an at-a-glance grade
+  const score = counts.critical * 10 + counts.serious * 4 + counts.warning * 1;
+  let posture;
+  if (counts.critical >= 2 || score >= 22)
+    posture = { g: "D", label: "Severely exposed", color: "var(--critical)",
+      note: "Multiple structural gaps compound each other. Treat this as an active risk condition, not a roadmap item." };
+  else if (counts.critical >= 1 || score >= 12)
+    posture = { g: "C", label: "Exposed", color: "var(--serious)",
+      note: "At least one finding describes a working path for an agent — or an attacker steering one — into your financial systems." };
+  else if (score >= 5)
+    posture = { g: "B", label: "Elevated", color: "var(--warning)",
+      note: "No single critical path, but gaps that shorten the distance between an incident and a loss." };
+  else if (score >= 1)
+    posture = { g: "B+", label: "Managed, with gaps", color: "var(--accent)",
+      note: "Your configuration is stronger than most — the remaining findings are worth closing while they're cheap." };
+  else
+    posture = { g: "A", label: "Baseline", color: "var(--good)",
+      note: "No rule-based findings. Confirm the honest answers match the checkboxes — that difference is where risk hides." };
+
+  document.getElementById("posture").innerHTML = `
+    <div class="tile" style="display:flex; align-items:center; gap:18px; margin-top:18px; border-left: 5px solid ${posture.color};">
+      <div style="font-size:44px; font-weight:800; color:${posture.color}; line-height:1;">${posture.g}</div>
+      <div>
+        <div style="font-weight:800; font-size:16px;">Exposure posture: ${posture.label}</div>
+        <div style="font-size:13.5px; color:var(--text-secondary); margin-top:2px;">${posture.note}</div>
+      </div>
+    </div>`;
+
+  document.getElementById("tiles").innerHTML = Object.entries(counts)
+    .filter(([, n]) => n > 0)
+    .map(([sev, n]) => `
+      <div class="tile">
+        <div class="lbl"><span class="dot" style="background:${SEV[sev].color}"></span>${SEV[sev].icon} ${SEV[sev].label}</div>
+        <div class="n">${n}</div>
+      </div>`).join("") || `<div class="tile"><div class="lbl">✅ No findings</div><div class="n">0</div></div>`;
+
+  document.getElementById("findings").innerHTML = hits.map(h => `
+    <details class="finding" style="border-left-color:${SEV[h.sev].color}">
+      <summary>
+        <span class="sev-badge" style="background:${SEV[h.sev].color}">${SEV[h.sev].icon} ${SEV[h.sev].label}</span>
+        <span class="f-title">${h.title}</span>
+      </summary>
+      <div class="f-body">
+        <p>${h.body}</p>
+        <div class="why"><b>Why teams miss this:</b> ${h.why}</div>
+      </div>
+    </details>`).join("") || `<p style="margin-top:16px;color:var(--text-secondary)">No rule-based findings for this configuration. That usually means the honest answer to some questions above is less tidy than the checkbox — a consultation digs into the difference.</p>`;
+
+  document.getElementById("stamp").textContent =
+    `Automated triage · ${hits.length} finding${hits.length === 1 ? "" : "s"} · based solely on your selections · generated in-browser (nothing you selected leaves this page)`;
+
+  f.style.display = "none";
+  document.getElementById("report").style.display = "block";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+let lastRun = null;
+
+function toggleAllFindings(open) {
+  document.querySelectorAll("#findings details.finding").forEach(d => d.open = open);
+}
+
+function scheduleConsult() {
+  if (CONFIG.schedulingUrl) { window.open(CONFIG.schedulingUrl, "_blank"); return; }
+  const c = lastRun ? lastRun.counts : null;
+  const top = lastRun ? lastRun.hits.slice(0, 5).map(h => `- [${SEV[h.sev].label}] ${h.title}`).join("\n") : "";
+  const subject = encodeURIComponent("AI·IA risk triage — consultation request");
+  const body = encodeURIComponent(
+    "I ran the AI·IA agentic risk triage" +
+    (c ? ` and got ${c.critical} critical, ${c.serious} serious, and ${c.warning} warning finding(s).` : ".") +
+    (top ? "\n\nTop findings:\n" + top : "") +
+    "\n\nI'd like to schedule a structured review.\n\nCompany:\nRole:\nBest times:"
+  );
+  location.href = `mailto:${CONFIG.contactEmail}?subject=${subject}&body=${body}`;
+}
+
+function submitStory() {
+  const text = document.getElementById("storyText").value.trim();
+  const status = document.getElementById("storyStatus");
+  if (text.length < 40) { status.textContent = "Write a little more — even three sentences helps."; return; }
+  const contact = document.getElementById("storyContact").value.trim();
+  if (CONFIG.storyEndpoint) {
+    status.textContent = "Sending…";
+    fetch(CONFIG.storyEndpoint, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ story: text, contact: contact, submitted: new Date().toISOString() }),
+    }).then(r => {
+      status.textContent = r.ok ? "Received. Thank you — this is exactly how the ruleset gets better." : "Something went wrong — please try again.";
+      if (r.ok) { document.getElementById("storyText").value = ""; document.getElementById("storyContact").value = ""; }
+    }).catch(() => { status.textContent = "Something went wrong — please try again."; });
+  } else {
+    const subject = encodeURIComponent("AI·IA field story");
+    const body = encodeURIComponent(text + (contact ? `\n\nContact: ${contact}` : "\n\n(No contact provided.)"));
+    location.href = `mailto:${CONFIG.contactEmail}?subject=${subject}&body=${body}`;
+    status.textContent = "Your email app should have opened with the story ready to send.";
+  }
+}
+
+// Print: open every finding so the saved report is complete, then restore prior state
+let _printClosed = [];
+window.addEventListener("beforeprint", () => {
+  _printClosed = [...document.querySelectorAll("details.finding:not([open])")];
+  _printClosed.forEach(d => d.open = true);
+});
+window.addEventListener("afterprint", () => {
+  _printClosed.forEach(d => d.open = false);
+  _printClosed = [];
+});
+</script>
+</body>
+</html>
