@@ -127,14 +127,14 @@
   <div class="entry" style="border-left-color: var(--serious);">
     <div class="entry-head">
       <span class="sev-badge" style="background: var(--serious);">⚠️ SERIOUS</span>
-      <span class="status open">Open</span>
-      <span class="date">Shipped July 2026 · caught August 8, 2026</span>
+      <span class="status fixed">Fixed</span>
+      <span class="date">Shipped July 2026 · caught August 8, 2026 · fixed August 9, 2026</span>
     </div>
     <h2>We shipped a "share your story" feature that quietly captured nothing</h2>
     <div class="row"><b>What happened</b>We launched a field-story submission box before the backend for it existed. For visitors without a configured mail client — very common on desktop — the Submit button silently did nothing. For everyone else, it opened their email app, which shares their email address with us whether or not they wanted that.</div>
     <div class="row"><b>Impact</b>An unknown number of practitioners may have tried to send us a story and believed they had, or walked away when nothing happened. Stories are the most valuable thing anyone can give us. We built a door that didn't open.</div>
     <div class="row"><b>How it was caught</b>A pre-campaign review of our own site — before asking anyone to visit it — traced the submit path end to end instead of assuming it worked.</div>
-    <div class="row control"><b>What changed</b>A real submission endpoint is being wired in, and the page copy was rewritten in the meantime to say plainly that the fallback opens your email app and shares your address. New rule: no call-to-action ships until someone has completed it end to end as a stranger would. Status flips to Fixed when the endpoint is live and tested.</div>
+    <div class="row control"><b>What changed</b>A real submission endpoint went live August 9, 2026, and this status changed only after it was tested end to end. Worth admitting: the first test submission promptly landed in the form processor's spam folder — a second silent-failure mode, caught only because we tested instead of assumed. The flow was reworked until a test story landed in the inbox with notifications firing. New rule, now twice-earned: no call-to-action ships until someone has completed it end to end as a stranger would.</div>
   </div>
 
   <div class="entry" style="border-left-color: var(--critical);">
