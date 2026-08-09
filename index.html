@@ -83,6 +83,11 @@
   label.opt input { margin-top: 4px; accent-color: var(--accent); width: 17px; height: 17px; flex: none; }
   label.opt input:checked + span { font-weight: 700; }
   .opt small { display: block; color: var(--text-muted); font-weight: 400; font-size: 12.5px; }
+  /* knowledge-boundary ("blind spot") options — full-width dashed row at the end of each section */
+  label.opt.kb { grid-column: 1 / -1; border-style: dashed; background: var(--surface-3); }
+  label.opt.kb:hover { background: #eef4ff; }
+  label.opt.kb input { accent-color: var(--blue); }
+  label.opt.kb:has(input:checked) { background: #ddeaff; border-color: var(--blue); box-shadow: 0 3px 0 rgba(42,120,214,.5); }
   .actions { text-align: center; margin-top: 34px; }
   button.primary {
     background: var(--accent); color: #fff; border: 3px solid var(--border); font-size: 18px; font-weight: 800;
@@ -247,6 +252,7 @@
         <label class="opt"><input type="checkbox" name="org" value="public"><span>Public company (SOX)<small>Or actively preparing for IPO</small></span></label>
         <label class="opt"><input type="checkbox" name="org" value="pe"><span>Private / PE-backed<small>No SOX mandate</small></span></label>
         <label class="opt"><input type="checkbox" name="org" value="no_ia"><span>No internal audit function<small>Or unsure whether one exists</small></span></label>
+        <label class="opt kb"><input type="checkbox" name="kb" value="kb_org"><span>❓ Something governs us that I can’t map<small>Other regulations, lender or grant requirements, state privacy law — you suspect they apply but couldn’t explain how</small></span></label>
       </div>
     </details>
 
@@ -268,6 +274,7 @@
         <label class="opt"><input type="checkbox" name="data" value="euc"><span>Critical Excel workbooks<small>Models the close depends on, outside any system</small></span></label>
         <label class="opt"><input type="checkbox" name="data" value="jira"><span>Jira<small>Change requests &amp; ticket workflow</small></span></label>
         <label class="opt"><input type="checkbox" name="payroll" value="external_payroll"><span>Payroll outside the ERP<small>ADP, Paychex, etc. — allocated back via journals</small></span></label>
+        <label class="opt kb"><input type="checkbox" name="kb" value="kb_systems"><span>❓ There’s more in the stack than I can name<small>Integrations, middleware, custom scripts, bank/EDI feeds — set up by someone, documented by no one</small></span></label>
       </div>
     </details>
 
@@ -284,6 +291,7 @@
         <label class="opt"><input type="checkbox" name="ai" value="email_ai"><span>AI reads or drafts email<small>Outlook Copilot, inbox summarization, triage</small></span></label>
         <label class="opt"><input type="checkbox" name="ai" value="coding_agent"><span>Coding agents<small>Cursor, GitHub Copilot, script generation</small></span></label>
         <label class="opt"><input type="checkbox" name="ai" value="custom_agents"><span>Custom / autonomous agents<small>Internal builds, scheduled agent jobs</small></span></label>
+        <label class="opt kb"><input type="checkbox" name="kb" value="kb_ai"><span>❓ AI is in use in ways I can’t describe<small>You’ve heard about tools or “automations” people use but couldn’t say what they touch</small></span></label>
       </div>
     </details>
 
@@ -299,6 +307,7 @@
         <label class="opt"><input type="checkbox" name="access" value="personal_automation"><span>Automations run under personal accounts<small>Scheduled jobs attributed to real people</small></span></label>
         <label class="opt"><input type="checkbox" name="access" value="partial_revocation"><span>AI access revoked for some, not all<small>Exceptions exist after a policy decision</small></span></label>
         <label class="opt"><input type="checkbox" name="access" value="related_parties"><span>Close relationships span approval chains<small>Hiring, vendors, or payments touch someone's family or friends</small></span></label>
+        <label class="opt kb"><input type="checkbox" name="kb" value="kb_access"><span>❓ Honestly — I don’t know who can reach what<small>No current picture of roles, permissions, or shared credentials</small></span></label>
       </div>
     </details>
 
@@ -317,6 +326,7 @@
         <label class="opt"><input type="checkbox" name="ctrl" value="coi"><span>Conflict-of-interest attestations<small>Current, and reconciled against the vendor master</small></span></label>
         <label class="opt"><input type="checkbox" name="ctrl" value="usage_reporting"><span>AI usage & spend reporting</span></label>
         <label class="opt"><input type="checkbox" name="ctrl" value="indep_security"><span>Security reports outside the AI org<small>Reviewer doesn't report to the deployer</small></span></label>
+        <label class="opt kb"><input type="checkbox" name="kb" value="kb_ctrl"><span>❓ Controls may exist that I can’t verify<small>Someone says “we do that,” but you couldn’t produce the evidence</small></span></label>
       </div>
     </details>
 
@@ -473,6 +483,36 @@ const SEV = {
   serious:  { label: "SERIOUS",  color: "var(--serious)",  icon: "⚠️", order: 1 },
   warning:  { label: "WARNING",  color: "var(--warning)",  icon: "🟡", order: 2 },
   info:     { label: "NOTE",     color: "var(--good)",     icon: "ℹ️", order: 3 },
+  blind:    { label: "BLIND SPOT", color: "var(--blue)",    icon: "❓", order: 4 },
+};
+
+// Knowledge-boundary ("blind spot") meta — each kb checkbox maps to a finding plus the expertise it signals
+const KB_META = {
+  kb_org: {
+    title: "Regulatory scope is unmapped — rules may bind you that nobody has listed",
+    body: "You flagged that regulations or obligations may apply that you can't fully map. Every downstream decision inherits that uncertainty: you can't scope an AI policy, a data-handling rule, or an audit plan against requirements nobody has enumerated.",
+    need: "Compliance counsel or a CPA firm with your industry specialization — one scoping exercise that puts in writing which regimes actually bind you."
+  },
+  kb_systems: {
+    title: "The system inventory has known gaps — the stack is bigger than the diagram",
+    body: "Integrations, middleware, scheduled scripts, and bank or EDI feeds you can't name are exactly where agents and automations act unobserved. An incomplete inventory means every finding above is a floor, not a ceiling.",
+    need: "A systems architect or integration specialist — often a fractional ERP admin — to walk the stack and produce a documented inventory: every connection, every credential, every scheduled job."
+  },
+  kb_ai: {
+    title: "AI use exists that nobody can characterize",
+    body: "You know AI is being used in ways you can't describe. Uncharacterized AI is the riskiest kind — it has the capability of every tool listed above with none of the visibility, and it never appears in a risk assessment.",
+    need: "A SaaS-discovery / IT-asset pass plus a no-blame usage survey — someone who turns \"people are using something\" into a named tool list with data touchpoints."
+  },
+  kb_access: {
+    title: "Access is unmapped — you can't say who can reach what",
+    body: "Every finding in this report assumes a known permission landscape; you've told us it isn't known. Until access is mapped, you cannot bound what any AI tool — or any person — can actually do in your environment.",
+    need: "An IAM / user-access review specialist to run a point-in-time access review across ERP, M365, and finance systems — the prerequisite for every other control on this page."
+  },
+  kb_ctrl: {
+    title: "Controls that can't be verified have to be scored as absent",
+    body: "\"We do that\" without producible evidence is the classic pre-audit posture. Some of these controls may genuinely exist — but until someone documents and evidences them, this report (and any future auditor) must treat them as missing.",
+    need: "An internal-audit or controls-documentation resource — fractional works — to walk each claimed control and turn it into evidence: policy, owner, frequency, artifact."
+  },
 };
 
 // Rules engine v0.1 — each rule: when(sel) → boolean, severity, title, body, why
@@ -776,13 +816,15 @@ function runAnalysis(e) {
   const sel = {
     org: collect(f, "org"), erp: collect(f, "erp"), fin: collect(f, "fin"), data: collect(f, "data"),
     payroll: collect(f, "payroll"), ai: collect(f, "ai"), access: collect(f, "access"), ctrl: collect(f, "ctrl"),
+    kb: collect(f, "kb"),
   };
   const hits = RULES.filter(r => { try { return r.when(sel); } catch { return false; } })
                     .sort((a, b) => SEV[a.sev].order - SEV[b.sev].order);
 
   const counts = { critical: 0, serious: 0, warning: 0, info: 0 };
   hits.forEach(h => counts[h.sev]++);
-  lastRun = { hits, counts };
+  const bs = sel.kb.length;
+  lastRun = { hits, counts, kb: sel.kb };
 
   // Overall exposure posture — weighted score drives an at-a-glance grade
   const score = counts.critical * 10 + counts.serious * 4 + counts.warning * 1;
@@ -803,6 +845,14 @@ function runAnalysis(e) {
     posture = { g: "A", label: "Baseline", color: "var(--good)",
       note: "No rule-based findings. Confirm the honest answers match the checkboxes — that difference is where risk hides." };
 
+  // Blind spots don't add to the score — they cap the confidence of the grade instead.
+  if (bs > 0) {
+    if (posture.g === "A")
+      posture = { g: "A−", label: "Baseline, with blind spots", color: "var(--blue)",
+        note: "No rule-based findings — but you flagged territory you can't see into, and unmapped territory usually grades worse, not better." };
+    posture.note += ` You flagged ${bs} blind spot${bs === 1 ? "" : "s"} below — this grade only covers what you could see.`;
+  }
+
   document.getElementById("posture").innerHTML = `
     <div class="tile" style="display:flex; align-items:center; gap:18px; margin-top:18px; border-left: 5px solid ${posture.color};">
       <div style="font-size:44px; font-weight:800; color:${posture.color}; line-height:1;">${posture.g}</div>
@@ -819,8 +869,13 @@ function runAnalysis(e) {
         <div class="lbl"><span class="dot" style="background:${SEV[sev].color}"></span>${SEV[sev].icon} ${SEV[sev].label}</div>
         <div class="n">${n}</div>
       </div>`).join("") || `<div class="tile"><div class="lbl">✅ No findings</div><div class="n">0</div></div>`;
+  if (bs > 0) document.getElementById("tiles").innerHTML += `
+      <div class="tile" style="border-style:dashed;">
+        <div class="lbl"><span class="dot" style="background:${SEV.blind.color}"></span>${SEV.blind.icon} ${SEV.blind.label}${bs === 1 ? "" : "S"}</div>
+        <div class="n">${bs}</div>
+      </div>`;
 
-  document.getElementById("findings").innerHTML = hits.map(h => `
+  const findingsHTML = hits.map(h => `
     <details class="finding" style="border-left-color:${SEV[h.sev].color}">
       <summary>
         <span class="sev-badge" style="background:${SEV[h.sev].color}">${SEV[h.sev].icon} ${SEV[h.sev].label}</span>
@@ -830,10 +885,27 @@ function runAnalysis(e) {
         <p>${h.body}</p>
         <div class="why"><b>Why teams miss this:</b> ${h.why}</div>
       </div>
-    </details>`).join("") || `<p style="margin-top:16px;color:var(--text-secondary)">No rule-based findings for this configuration. That usually means the honest answer to some questions above is less tidy than the checkbox — a consultation digs into the difference.</p>`;
+    </details>`).join("");
+
+  const blindHTML = bs === 0 ? "" : `
+    <div class="section-label" style="margin:28px 0 2px;">Blind spots — where you’d need help documenting</div>
+    <p style="font-size:13.5px;color:var(--text-muted);margin:0;">You flagged these yourself — that’s the mark of a good operator, not a bad one. Each names the expertise that turns “I can’t see it” into a documented answer.</p>` +
+    sel.kb.map(k => { const b = KB_META[k]; if (!b) return ""; return `
+    <details class="finding" style="border-left-color:${SEV.blind.color}" open>
+      <summary>
+        <span class="sev-badge" style="background:${SEV.blind.color}">${SEV.blind.icon} ${SEV.blind.label}</span>
+        <span class="f-title">${b.title}</span>
+      </summary>
+      <div class="f-body">
+        <p>${b.body}</p>
+        <div class="why"><b>Who you’d need in the room:</b> ${b.need}</div>
+      </div>
+    </details>`; }).join("");
+
+  document.getElementById("findings").innerHTML = (findingsHTML + blindHTML) || `<p style="margin-top:16px;color:var(--text-secondary)">No rule-based findings for this configuration. That usually means the honest answer to some questions above is less tidy than the checkbox — a consultation digs into the difference.</p>`;
 
   document.getElementById("stamp").textContent =
-    `Automated triage · ${hits.length} finding${hits.length === 1 ? "" : "s"} · based solely on your selections · generated in-browser (nothing you selected leaves this page)`;
+    `Automated triage · ${hits.length} finding${hits.length === 1 ? "" : "s"}${bs ? ` · ${bs} blind spot${bs === 1 ? "" : "s"} flagged` : ""} · based solely on your selections · generated in-browser (nothing you selected leaves this page)`;
 
   f.style.display = "none";
   document.getElementById("report").style.display = "block";
@@ -850,11 +922,14 @@ function scheduleConsult() {
   if (CONFIG.schedulingUrl) { window.open(CONFIG.schedulingUrl, "_blank"); return; }
   const c = lastRun ? lastRun.counts : null;
   const top = lastRun ? lastRun.hits.slice(0, 5).map(h => `- [${SEV[h.sev].label}] ${h.title}`).join("\n") : "";
+  const blind = lastRun && lastRun.kb && lastRun.kb.length
+    ? "\n\nBlind spots I flagged (areas we can't document internally):\n" + lastRun.kb.map(k => "- " + (KB_META[k] ? KB_META[k].title : k)).join("\n")
+    : "";
   const subject = encodeURIComponent("AI·IA risk triage — consultation request");
   const body = encodeURIComponent(
     "I ran the AI·IA agentic risk triage" +
     (c ? ` and got ${c.critical} critical, ${c.serious} serious, and ${c.warning} warning finding(s).` : ".") +
-    (top ? "\n\nTop findings:\n" + top : "") +
+    (top ? "\n\nTop findings:\n" + top : "") + blind +
     "\n\nI'd like to schedule a structured review.\n\nCompany:\nRole:\nBest times:"
   );
   location.href = `mailto:${CONFIG.contactEmail}?subject=${subject}&body=${body}`;
