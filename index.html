@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; font-src data:; base-uri 'none'; frame-ancestors 'none';">
 <title>AI·IA — Agentic Risk Triage</title>
 <meta name="description" content="Free 3-minute triage of agentic-AI risk in your financial systems. Built for CFOs, controllers, and audit committees by practitioners who audit AI the way attackers and auditors actually think.">
 <meta property="og:title" content="AI·IA — Agentic Risk Triage">
@@ -38,6 +39,15 @@
   .wordmark .flip { color: var(--accent); }
   .tagline { font-size: 20px; color: var(--text-secondary); margin-top: 10px; max-width: 620px; margin-left:auto; margin-right:auto;}
   .sub { font-size: 14px; color: var(--text-muted); margin-top: 14px; }
+  .pitch { font-size: 15.5px; color: var(--text-primary); margin-top: 12px; font-weight: 600; max-width: 620px; margin-left: auto; margin-right: auto; }
+  .pitch em { color: var(--accent-ink); font-style: normal; }
+  .offer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin-top: 16px; }
+  .offer { border: 1px solid var(--border); border-radius: 10px; padding: 18px; background: var(--surface-1); display: flex; flex-direction: column; gap: 10px; }
+  .offer .tier { font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: #fff; border-radius: 20px; padding: 3px 12px; align-self: flex-start; }
+  .offer h3 { font-size: 15.5px; }
+  .offer p { font-size: 13.5px; color: var(--text-secondary); flex: 1; }
+  .offer .soon { font-size: 11px; font-weight: 800; color: var(--accent-ink); text-transform: uppercase; letter-spacing: .6px; }
+  .offer button { margin-left: 0; }
   .card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); padding: 28px; margin-top: 24px; }
   h2 { font-size: 17px; margin-bottom: 4px; }
   .step-hint { font-size: 13.5px; color: var(--text-muted); margin-bottom: 16px; }
@@ -86,7 +96,7 @@
   }
   textarea:focus, input.txt:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
   @media print {
-    .actions, .cta button, header.hero .sub, #stories { display: none; }
+    .actions, .cta button, header.hero .sub, #stories, #offerings { display: none; }
     .finding { page-break-inside: avoid; }
     details[open] > summary ~ * { display: block; }
   }
@@ -96,6 +106,7 @@
 <header class="hero">
   <div class="wordmark">AI<span class="flip">·</span>IA</div>
   <div class="tagline">Your AI rollout has risks nobody on your team has mapped. Find the big ones in three minutes — free.</div>
+  <div class="pitch">Your access reports tell you who <em>could</em>. We tell you what your AI will actually <em>do</em> — and we sell you the tests to prove it.</div>
   <div class="sub">Agentic-AI risk triage for the systems that run your money. Built by practitioners who audit AI the way attackers and auditors actually think.<br>Our rule from the field: treat every system like the cameras are on — because now they are.</div>
 </header>
 
@@ -106,7 +117,7 @@
       <span style="font-size:22px;color:var(--accent);">↓</span>
     </summary>
     <div id="demoCards" style="margin-top:18px; display:grid; gap:14px;"></div>
-    <p class="disclaimer" style="text-align:left;margin-top:16px;">These are illustrative demonstrations of how ordinary requests can produce unintended results — awareness examples, not attack instructions. They contain no working exploit code.</p>
+    <p class="disclaimer" style="text-align:left;margin-top:16px;">These are illustrative demonstrations of how ordinary requests can produce unintended results — awareness examples, not attack instructions. They contain no working exploit code. The runnable version of each — a vetted, safe-to-execute test with setup guide, pass/fail rubric, and evidence log — is what subscribers license in our Control Test Packs below.</p>
   </details>
 
   <form id="scanForm" onsubmit="runAnalysis(event)">
@@ -213,6 +224,33 @@
     <p class="disclaimer">This automated triage is informational only and is based solely on the selections you provided. It is not an audit, security assessment, legal advice, or professional opinion, and it does not establish an engagement or duty of care. Findings describe categories of risk commonly associated with the indicated configurations; your actual exposure depends on facts not collected here.</p>
   </div>
 
+  <div class="card" id="offerings">
+    <h2>Offerings</h2>
+    <div class="step-hint">Test yourself, test continuously, or have us test you. Either way it's your environment and your data — we never touch either.</div>
+    <div class="offer-grid">
+      <div class="offer">
+        <span class="tier" style="background:var(--good)">Free</span>
+        <h3>Risk Triage</h3>
+        <p>This page. Three minutes of checkboxes, a severity-ranked report with an exposure grade, printable for your next leadership meeting. No account, no install — nothing you select leaves your browser. Free forever.</p>
+        <button class="ghost" onclick="goTriage()">Run the triage</button>
+      </div>
+      <div class="offer">
+        <span class="tier" style="background:var(--accent)">Subscription</span>
+        <h3>Control Test Packs</h3>
+        <p>The demos above are the illustrative versions. Subscribers license the runnable ones: a library of vetted, safe-to-execute test prompts, each mapped to a named control objective, with sandbox setup guides, pass/fail rubrics, and evidence logs your auditors can file. Updated as agent capabilities change. You run them in your own environment, on your own authorization — your data never touches us.</p>
+        <div class="soon">Coming soon · annual license per company</div>
+        <button class="ghost" onclick="packsWaitlist()">Join the waitlist</button>
+      </div>
+      <div class="offer">
+        <span class="tier" style="background:var(--serious)">Consultation</span>
+        <h3>Independent Review</h3>
+        <p>We administer the full test suite and a structured review of your environment under NDA — fixed fee, scoped deliverable, findings written for your auditors and board. Pre-acquisition diligence on deal timelines. Portfolio programs for sponsors who want one standard across every company they hold.</p>
+        <button class="primary" style="font-size:14px; padding:11px 24px;" onclick="scheduleConsult()">Schedule a consultation</button>
+      </div>
+    </div>
+    <p class="disclaimer" style="text-align:left; margin-top:16px;">Test packs are licensed for use in your own environment with your organization's written authorization, and are designed as safe checks — probes against sandbox and canary data you control, never live exploits.</p>
+  </div>
+
   <div class="card" id="stories">
     <h2>Seen something? Tell the story.</h2>
     <div class="step-hint">Auditors, controllers, admins, consultants — practicing or retired. Field stories are how the detection rules above get built.</div>
@@ -235,8 +273,8 @@
 <script>
 // ── Config: set your scheduling link when you have one; until then the CTA opens a pre-filled email.
 const CONFIG = {
-  schedulingUrl: "",                              // e.g. "https://calendly.com/your-handle/intro"
-  contactEmail: "shawn.ross.kimble@gmail.com",    // fallback CTA target
+  schedulingUrl: "https://calendly.com/shawn-kimble-aiia-risk/30min",
+  contactEmail: "consultation@aiia-risk.com",     // fallback CTA target
   storyEndpoint: "",                              // POST endpoint for story intake (Formspree/Basin/own API); mailto fallback until set
 };
 
@@ -618,6 +656,18 @@ function toggleAllFindings(open) {
   document.querySelectorAll("#findings details.finding").forEach(d => d.open = open);
 }
 
+function goTriage() {
+  const f = document.getElementById("scanForm");
+  if (f.style.display === "none") { location.reload(); return; }
+  f.scrollIntoView({ behavior: "smooth" });
+}
+
+function packsWaitlist() {
+  const subject = encodeURIComponent("AI·IA Control Test Packs — waitlist");
+  const body = encodeURIComponent("Add me to the Control Test Pack waitlist.\n\nCompany:\nRole:\nSystems in scope (ERP, AI tools):");
+  location.href = `mailto:${CONFIG.contactEmail}?subject=${subject}&body=${body}`;
+}
+
 function scheduleConsult() {
   if (CONFIG.schedulingUrl) { window.open(CONFIG.schedulingUrl, "_blank"); return; }
   const c = lastRun ? lastRun.counts : null;
@@ -665,5 +715,12 @@ window.addEventListener("afterprint", () => {
   _printClosed = [];
 });
 </script>
+<footer style="max-width:820px;margin:48px auto 24px;padding:20px;border-top:1px solid #e2e6eb;font-size:12px;line-height:1.6;color:#6b7280;text-align:center">
+  <div><strong>Artificial Intelligence Internal Audit Risk, LLC</strong> d/b/a AIIA Risk</div>
+  <div>268 Post Rd Ste 200 PMB 168359, Fairfield, CT 06824-6220</div>
+  <div>Contact: <a href="mailto:consultation@aiia-risk.com" style="color:#2a78d6">consultation@aiia-risk.com</a></div>
+  <div style="margin-top:8px">This triage runs entirely in your browser. The systems and answers you select are never transmitted to us or stored — nothing you enter leaves this page.</div>
+  <div style="margin-top:8px">© 2026 Artificial Intelligence Internal Audit Risk, LLC. Informational only; not an audit, security assessment, or legal advice, and no engagement or duty of care is created.</div>
+</footer>
 </body>
 </html>
