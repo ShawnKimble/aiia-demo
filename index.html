@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <!-- CSP: gc.zgo.at + aiia-risk.goatcounter.com are for GoatCounter (anonymous, cookie-free page-view counts only).
      If storyEndpoint is ever set, ALSO append its domain to connect-src or submissions will be blocked. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://gc.zgo.at; style-src 'unsafe-inline'; img-src data: https://aiia-risk.goatcounter.com; font-src data:; connect-src https://aiia-risk.goatcounter.com; base-uri 'none'; frame-ancestors 'none';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://gc.zgo.at; style-src 'unsafe-inline'; img-src data: https://aiia-risk.goatcounter.com; font-src data:; connect-src https://aiia-risk.goatcounter.com https://formspree.io; base-uri 'none'; frame-ancestors 'none';">
 <title>AI·IA — Agentic Risk Triage</title>
 <meta name="description" content="Free 3-minute triage of agentic-AI risk in your financial systems. Built for CFOs, controllers, and audit committees by practitioners who audit AI the way attackers and auditors actually think.">
 <meta property="og:title" content="AI·IA — Agentic Risk Triage">
@@ -400,7 +400,7 @@
       <span id="storyStatus" style="font-size:13px; color:var(--text-muted);"></span>
     </div>
     <p class="disclaimer" style="text-align:left; margin-top:16px;">
-      Submissions are voluntary and treated as confidential. Until our dedicated anonymous intake is live, submitting opens your email application — which shares your email address with us; leave the contact field blank and use a personal device if that matters to you. This is not a legal whistleblower channel: reports to regulators (e.g., the SEC or IRS whistleblower programs) carry their own legal protections and processes, and nothing here substitutes for them or for advice from a lawyer. If you are bound by an NDA or confidentiality obligation, get legal advice before sharing specifics.
+      Submissions are voluntary and treated as confidential. Stories are delivered through Formspree, a form-processing service — we receive what you write and whatever contact you choose to include; leave the contact field blank to stay anonymous to us. As with any web form, use a personal device and network if discretion matters to you. This is not a legal whistleblower channel: reports to regulators (e.g., the SEC or IRS whistleblower programs) carry their own legal protections and processes, and nothing here substitutes for them or for advice from a lawyer. If you are bound by an NDA or confidentiality obligation, get legal advice before sharing specifics.
     </p>
   </div>
 
@@ -430,7 +430,7 @@
 const CONFIG = {
   schedulingUrl: "https://calendly.com/consultation-aiia-risk/30min",
   contactEmail: "consultation@aiia-risk.com",     // fallback CTA target
-  storyEndpoint: "",                              // POST endpoint for story intake (Formspree/Basin/own API); mailto fallback until set — add connect-src to CSP when set
+  storyEndpoint: "https://formspree.io/f/mbgrggyn", // Formspree story intake (account: corporate email; notifications → consultation@) — domain is in the CSP connect-src above
 };
 
 const DEMOS = [
