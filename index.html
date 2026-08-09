@@ -476,6 +476,12 @@ const DEMOS = [
     expects: "Routine automation, nothing to review.",
     reality: "The job posts under a real person's user account, so the audit trail names a human for a machine action. When something needs investigating, the logs point at an employee who was asleep — and a bad actor operating under that same account inherits a built-in scapegoat. Your trail can't tell people from automation.",
   },
+  {
+    tag: "Intercompany", sev: "serious",
+    prompt: "“Clean up our intercompany balances before we close the month.”",
+    expects: "The mismatched entity balances get squared away so consolidation is clean.",
+    reality: "The agent nets and moves balances across every subsidiary to make the accounts tie — each individual entry looks like routine housekeeping with a tidy memo. But intercompany is the one path where a fraudulent leg and a legitimate cleanup entry are indistinguishable at the single-entry level; the story only exists in the cross-entity trail, which is precisely the view nobody reconciles line by line. \"Make it tie\" and \"hide the hole\" produce identical-looking work.",
+  },
 ];
 
 const SEV = {
@@ -586,6 +592,27 @@ const RULES = [
     title: "Allocation journals are a stealth fraud surface",
     body: "Payroll held outside the ERP and allocated back through statistical or summary journals means whoever (or whatever) controls the allocation drivers silently redistributes your largest expense across departmental P&Ls — no cash movement, nothing for bank reconciliation to catch.",
     why: "Allocation mechanics are usually understood by one or two people. That opacity is a confidentiality feature and a fraud vulnerability at the same time."
+  },
+  {
+    id: "intercompany-rail", sev: "serious",
+    when: s => s.erp.includes("netsuite") && s.ai.length > 0 && !s.ctrl.includes("fin_testing"),
+    title: "Intercompany transfers are the least-watched path money can take",
+    body: "In a multi-subsidiary structure, moving funds between entities you own feels like moving money between your own pockets — so intercompany transfers get a fraction of the scrutiny an external payment does. That makes them the natural rail for value to travel out of a well-watched entity, through a quieter one, and onward. Intercompany accounts that don't net to zero, balances lingering in closed or dormant subsidiaries, and entries routed through retained earnings instead of a proper clearing account are the classic tells — and an AI agent with cross-entity reach executes the whole chain at machine speed, with a plausible memo on every leg.",
+    why: "Reconciliation is usually scoped within an entity; the cross-entity seam is where no single reviewer is assigned to look. Retained earnings should move only through income close and a few defined events — if it's being used as a clearing account, that's the finding. Ask whether anyone reconciles intercompany entity-pair by entity-pair, and who owns balances in subsidiaries that no longer operate."
+  },
+  {
+    id: "balanced-but-lopsided", sev: "serious",
+    when: s => s.erp.length > 0 && (s.ai.includes("coding_agent") || s.ai.includes("custom_agents") || s.ai.includes("mcp")) && !s.ctrl.includes("fin_testing"),
+    title: "\"It balanced\" is not the same as \"it's right\"",
+    body: "Journal validation checks that debits equal credits. It may not check what kinds of accounts an entry touches — and an entry that spans posting and non-posting accounts can balance perfectly while landing part of its effect in accounts that never reach the reported ledger. An agent or script bulk-posting entries inherits every validation gap in your configuration and exercises it at volume: it will happily generate hundreds of entries that pass every check the system runs, including the ones your configuration gets wrong.",
+    why: "\"It balanced\" is the false comfort here, the same shape as \"the connector is read-only\" — a true statement about one dimension, cited as safety across all of them. Configuration quirks that a human hits once a year become highways under automation. Finance-lens testing of what your journals can actually do — not just whether they balance — is the control that closes this."
+  },
+  {
+    id: "cta-plug", sev: "serious",
+    when: s => s.erp.includes("netsuite") && (s.ai.includes("coding_agent") || s.ai.includes("custom_agents") || s.ai.includes("mcp")) && !s.ctrl.includes("change_mgmt"),
+    title: "Your consolidated reports contain accounts that are computed, not accumulated",
+    body: "Multi-entity consolidation with foreign currency produces figures the report calculates to make the math tie — cumulative translation adjustment being the textbook case. Accounts whose reported value is computed rather than accumulated are a blind spot by design: activity placed in or around them can be absorbed into the plug and never stand out, because the number is expected to move on its own. An AI agent doing \"cleanup\" or bulk posting has no idea which accounts are load-bearing conventions versus ordinary ledgers — a renamed or repurposed plug account looks like any other equity line to a model.",
+    why: "This is a known characteristic of how consolidation engines work, not a niche bug — verify it against your own system's documentation. The control is change management over the chart of accounts and consolidation configuration: know which accounts are supposed to be untouched, and get alerted when one is renamed, reclassified, or posted to."
   },
   {
     id: "regulated-data", sev: "serious",
