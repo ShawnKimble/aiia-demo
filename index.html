@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; font-src data:; base-uri 'none'; frame-ancestors 'none';">
+<!-- CSP: gc.zgo.at + aiia-risk.goatcounter.com are for GoatCounter (anonymous, cookie-free page-view counts only).
+     If storyEndpoint is ever set, ALSO append its domain to connect-src or submissions will be blocked. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://gc.zgo.at; style-src 'unsafe-inline'; img-src data: https://aiia-risk.goatcounter.com; font-src data:; connect-src https://aiia-risk.goatcounter.com; base-uri 'none'; frame-ancestors 'none';">
 <title>AI·IA — Agentic Risk Triage</title>
 <meta name="description" content="Free 3-minute triage of agentic-AI risk in your financial systems. Built for CFOs, controllers, and audit committees by practitioners who audit AI the way attackers and auditors actually think.">
 <meta property="og:title" content="AI·IA — Agentic Risk Triage">
@@ -321,7 +323,7 @@
   <div><strong>Artificial Intelligence Internal Audit Risk, LLC</strong> d/b/a AIIA Risk</div>
   <div>268 Post Rd Ste 200 PMB 168359, Fairfield, CT 06824-6220</div>
   <div>Contact: <a href="mailto:consultation@aiia-risk.com" style="color:var(--accent-ink)">consultation@aiia-risk.com</a></div>
-  <div style="margin-top:8px">This triage runs entirely in your browser. The systems and answers you select are never transmitted to us or stored — nothing you enter leaves this page.</div>
+  <div style="margin-top:8px">This triage runs entirely in your browser. The systems and answers you select are never transmitted to us or stored — nothing you enter leaves this page. We count visits with <a href="https://www.goatcounter.com" rel="noopener" style="color:var(--accent-ink)">GoatCounter</a>: anonymous, cookie-free page-view totals that contain nothing about you or your selections.</div>
   <div style="margin-top:8px">© 2026 Artificial Intelligence Internal Audit Risk, LLC. Informational only; not an audit, security assessment, or legal advice, and no engagement or duty of care is created.</div>
 </footer>
 
@@ -770,5 +772,7 @@ window.addEventListener("afterprint", () => {
   _printClosed = [];
 });
 </script>
+<!-- GoatCounter: anonymous, cookie-free page-view counting only. Dashboard: https://aiia-risk.goatcounter.com -->
+<script data-goatcounter="https://aiia-risk.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 </body>
 </html>
