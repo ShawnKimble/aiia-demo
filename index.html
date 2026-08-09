@@ -220,7 +220,7 @@
   <div class="trust">
     <span class="chip"><b>✓</b> Just a web page</span>
     <span class="chip"><b>✓</b> Runs 100% in your browser</span>
-    <span class="chip"><b>✓</b> No logins · no installs · nothing you enter leaves this page</span>
+    <span class="chip"><b>✓</b> No logins · no installs · your selections never leave this page</span>
   </div>
 </header>
 
@@ -396,7 +396,7 @@
     <textarea id="storyText" rows="6" placeholder="e.g., 'Mid-market SaaS co on NetSuite. AP clerk's assistant auto-processed an emailed invoice that…'"></textarea>
     <input class="txt" id="storyContact" style="margin-top:10px;" placeholder="Optional contact — leave blank to stay anonymous">
     <div style="margin-top:14px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
-      <button class="primary" style="font-size:14px; padding:11px 24px;" onclick="submitStory()">Submit story</button>
+      <button class="primary" id="storyBtn" style="font-size:14px; padding:11px 24px;" onclick="submitStory()">Submit story</button>
       <span id="storyStatus" style="font-size:13px; color:var(--text-muted);"></span>
     </div>
     <p class="disclaimer" style="text-align:left; margin-top:16px;">
@@ -421,7 +421,7 @@
   <div><strong>Artificial Intelligence Internal Audit Risk, LLC</strong> d/b/a AIIA Risk</div>
   <div>268 Post Rd Ste 200 PMB 168359, Fairfield, CT 06824-6220</div>
   <div>Contact: <a href="mailto:consultation@aiia-risk.com" style="color:var(--accent-ink)">consultation@aiia-risk.com</a> · <a href="about.html" style="color:var(--accent-ink)">About the founder</a> · <a href="mistakes.html" style="color:var(--accent-ink)">Where we messed up</a></div>
-  <div style="margin-top:8px">This triage runs entirely in your browser. The systems and answers you select are never transmitted to us or stored — nothing you enter leaves this page. We count visits with <a href="https://www.goatcounter.com" rel="noopener" style="color:var(--accent-ink)">GoatCounter</a>: anonymous, cookie-free page-view totals that contain nothing about you or your selections. <a href="stats.html" style="color:var(--accent-ink)">See exactly what we track — live →</a></div>
+  <div style="margin-top:8px">This triage runs entirely in your browser. The systems and answers you select are never transmitted to us or stored. The only thing that ever leaves this page is a field story you choose to submit — delivered via Formspree, which logs standard request metadata (like country) as any form processor does. We count visits with <a href="https://www.goatcounter.com" rel="noopener" style="color:var(--accent-ink)">GoatCounter</a>: anonymous, cookie-free page-view totals that contain nothing about you or your selections. <a href="stats.html" style="color:var(--accent-ink)">See exactly what we track — live →</a></div>
   <div style="margin-top:8px">© 2026 Artificial Intelligence Internal Audit Risk, LLC. Informational only; not an audit, security assessment, or legal advice, and no engagement or duty of care is created.</div>
 </footer>
 
@@ -955,14 +955,29 @@ function submitStory() {
   if (text.length < 40) { status.textContent = "Write a little more — even three sentences helps."; return; }
   const contact = document.getElementById("storyContact").value.trim();
   if (CONFIG.storyEndpoint) {
-    status.textContent = "Sending…";
+    const btn = document.getElementById("storyBtn");
+    const orig = btn.textContent;
+    btn.disabled = true; btn.textContent = "Sending…";
+    status.textContent = "Sending your story…";
+    const done = (msg, ok) => {
+      btn.disabled = false; btn.textContent = orig; status.textContent = msg;
+      if (ok) { document.getElementById("storyText").value = ""; document.getElementById("storyContact").value = ""; }
+    };
+    // Form-encoded payload with conventional field names — reads as a standard
+    // contact form to Formspree's spam filtering (raw JSON was landing in Spam).
+    const data = new URLSearchParams();
+    data.set("story", text);
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact)) data.set("email", contact);
+    else if (contact) data.set("contact", contact);
+    data.set("_subject", "AI·IA field story");
+    data.set("_gotcha", "");
     fetch(CONFIG.storyEndpoint, {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ story: text, contact: contact, submitted: new Date().toISOString() }),
+      method: "POST",
+      headers: { "Accept": "application/json", "Content-Type": "application/x-www-form-urlencoded" },
+      body: data.toString(),
     }).then(r => {
-      status.textContent = r.ok ? "Received. Thank you — this is exactly how the ruleset gets better." : "Something went wrong — please try again.";
-      if (r.ok) { document.getElementById("storyText").value = ""; document.getElementById("storyContact").value = ""; }
-    }).catch(() => { status.textContent = "Something went wrong — please try again."; });
+      done(r.ok ? "Received. Thank you — this is exactly how the ruleset gets better." : "Something went wrong — please try again.", r.ok);
+    }).catch(() => done("Something went wrong — please try again.", false));
   } else {
     const subject = encodeURIComponent("AI·IA field story");
     const body = encodeURIComponent(text + (contact ? `\n\nContact: ${contact}` : "\n\n(No contact provided.)"));
