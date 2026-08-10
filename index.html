@@ -251,6 +251,7 @@
         <label class="opt"><input type="checkbox" name="org" value="healthcare"><span>Healthcare / clinical research<small>Trials, PHI, FDA-regulated data</small></span></label>
         <label class="opt"><input type="checkbox" name="org" value="public"><span>Public company (SOX)<small>Or actively preparing for IPO</small></span></label>
         <label class="opt"><input type="checkbox" name="org" value="pe"><span>Private / PE-backed<small>No SOX mandate</small></span></label>
+        <label class="opt"><input type="checkbox" name="org" value="trust"><span>Trust / fiduciary accounting<small>Client funds, escrow, retainers, security deposits — money held for others</small></span></label>
         <label class="opt"><input type="checkbox" name="org" value="no_ia"><span>No internal audit function<small>Or unsure whether one exists</small></span></label>
         <label class="opt kb"><input type="checkbox" name="kb" value="kb_org"><span>❓ Something governs us that I can’t map<small>Other regulations, lender or grant requirements, state privacy law — you suspect they apply but couldn’t explain how</small></span></label>
       </div>
@@ -263,6 +264,7 @@
       </summary>
       <div class="grid">
         <label class="opt"><input type="checkbox" name="erp" value="netsuite"><span>NetSuite OneWorld<small>Multi-subsidiary, intercompany, consolidations</small></span></label>
+        <label class="opt"><input type="checkbox" name="erp" value="dynamics_ax"><span>Microsoft Dynamics AX / 365 F&amp;O<small>Including legacy or parent-managed instances</small></span></label>
         <label class="opt"><input type="checkbox" name="erp" value="qb"><span>QuickBooks</span></label>
         <label class="opt"><input type="checkbox" name="fin" value="blackline"><span>BlackLine<small>Reconciliations, close automation, certifications</small></span></label>
         <label class="opt"><input type="checkbox" name="fin" value="adaptive"><span>Workday Adaptive Planning<small>Budgets, forecasts, allocation drivers</small></span></label>
@@ -423,7 +425,7 @@
   <div>Contact: <a href="mailto:consultation@aiia-risk.com" style="color:var(--accent-ink)">consultation@aiia-risk.com</a> · <a href="about.html" style="color:var(--accent-ink)">About the founder</a> · <a href="mistakes.html" style="color:var(--accent-ink)">Where we messed up</a></div>
   <div style="margin-top:8px">This triage runs entirely in your browser. The systems and answers you select are never transmitted to us or stored. The only thing that ever leaves this page is a field story you choose to submit — delivered via Formspree, which logs standard request metadata (like country) as any form processor does. We count visits with <a href="https://www.goatcounter.com" rel="noopener" style="color:var(--accent-ink)">GoatCounter</a>: anonymous, cookie-free page-view totals that contain nothing about you or your selections. <a href="stats.html" style="color:var(--accent-ink)">See exactly what we track — live →</a></div>
   <div style="margin-top:8px">© 2026 Artificial Intelligence Internal Audit Risk, LLC. Informational only; not an audit, security assessment, or legal advice, and no engagement or duty of care is created.</div>
-  <div style="margin-top:8px;opacity:.55;font-size:11px" title="Build version — home / triage">v0.15 · triage · 2026-08-09</div>
+  <div style="margin-top:8px;opacity:.55;font-size:11px" title="Build version — home / triage">v0.16 · triage (trust accounting) · 2026-08-09</div>
 </footer>
 
 <script>
@@ -614,6 +616,13 @@ const RULES = [
     title: "Your consolidated reports contain accounts that are computed, not accumulated",
     body: "Multi-entity consolidation with foreign currency produces figures the report calculates to make the math tie — cumulative translation adjustment being the textbook case. Accounts whose reported value is computed rather than accumulated are a blind spot by design: activity placed in or around them can be absorbed into the plug and never stand out, because the number is expected to move on its own. An AI agent doing \"cleanup\" or bulk posting has no idea which accounts are load-bearing conventions versus ordinary ledgers — a renamed or repurposed plug account looks like any other equity line to a model.",
     why: "This is a known characteristic of how consolidation engines work, not a niche bug — verify it against your own system's documentation. The control is change management over the chart of accounts and consolidation configuration: know which accounts are supposed to be untouched, and get alerted when one is renamed, reclassified, or posted to."
+  },
+  {
+    id: "trust-commingle", sev: "serious",
+    when: s => s.org.includes("trust") && s.ai.length > 0 && !s.ctrl.includes("fin_testing"),
+    title: "Fiduciary cash is not operating cash — and your AI can't tell the difference",
+    body: "Trust and fiduciary accounts hold other people's money — client funds, escrow, retainers, security deposits — and the standard is absolute: each beneficiary's balance reconciles to the penny, and fiduciary cash never mixes with operating cash. An AI agent doing \"cleanup,\" netting, or cash-management work has no concept of that boundary. A sweep between operating and trust accounts, a plug journal to make a trust reconciliation tie, or a transfer that borrows momentarily against client balances isn't an accounting error — it's commingling, and in most regulated contexts a reportable breach the moment it happens, however briefly. Automation trained on how the operating ledger is managed will apply those same habits to fiduciary cash at machine speed.",
+    why: "The control is three-way reconciliation — bank balance, book balance, and the sum of individual beneficiary ledgers — performed by someone who can't post to the accounts, with fiduciary accounts explicitly fenced off from any automation's reach. Ask which of your agents or scheduled jobs can technically touch a trust account today; the honest answer is usually discovered, not known."
   },
   {
     id: "regulated-data", sev: "serious",
