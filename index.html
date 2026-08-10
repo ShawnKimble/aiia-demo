@@ -320,6 +320,7 @@
       </summary>
       <div class="grid">
         <label class="opt"><input type="checkbox" name="ctrl" value="policy"><span>AI acceptable-use policy</span></label>
+        <label class="opt"><input type="checkbox" name="ctrl" value="ai_guardrails"><span>Technical AI guardrails<small>Runtime enforcement beyond policy — model gateways, tool allowlists, approval gates, prompt/output filtering</small></span></label>
         <label class="opt"><input type="checkbox" name="ctrl" value="it_testing"><span>IT/security testing of AI tools</span></label>
         <label class="opt"><input type="checkbox" name="ctrl" value="fin_testing"><span>Finance-lens testing<small>Fraud, SOD, allocation abuse scenarios</small></span></label>
         <label class="opt"><input type="checkbox" name="ctrl" value="automation_inventory"><span>Automation inventory with owners<small>Every scheduled job has a named owner</small></span></label>
@@ -425,7 +426,7 @@
   <div>Contact: <a href="mailto:consultation@aiia-risk.com" style="color:var(--accent-ink)">consultation@aiia-risk.com</a> · <a href="about.html" style="color:var(--accent-ink)">About the founder</a> · <a href="mistakes.html" style="color:var(--accent-ink)">Where we messed up</a></div>
   <div style="margin-top:8px">This triage runs entirely in your browser. The systems and answers you select are never transmitted to us or stored. The only thing that ever leaves this page is a field story you choose to submit — delivered via Formspree, which logs standard request metadata (like country) as any form processor does. We count visits with <a href="https://www.goatcounter.com" rel="noopener" style="color:var(--accent-ink)">GoatCounter</a>: anonymous, cookie-free page-view totals that contain nothing about you or your selections. <a href="stats.html" style="color:var(--accent-ink)">See exactly what we track — live →</a></div>
   <div style="margin-top:8px">© 2026 Artificial Intelligence Internal Audit Risk, LLC. Informational only; not an audit, security assessment, or legal advice, and no engagement or duty of care is created.</div>
-  <div style="margin-top:8px;opacity:.55;font-size:11px" title="Build version — home / triage">v0.16 · triage (trust accounting) · 2026-08-09</div>
+  <div style="margin-top:8px;opacity:.55;font-size:11px" title="Build version — home / triage">v0.17 · triage (guardrail drift) · 2026-08-09</div>
 </footer>
 
 <script>
@@ -763,6 +764,13 @@ const RULES = [
     title: "Connectors authorized by privileged users carry privileged permissions",
     body: "An MCP or API connector typically acts with the permissions of the account that authorized it. When admins and write-capable users are the ones wiring connectors up, the \"assistant\" inherits their reach — every tool call executes under the most privileged identity in the room.",
     why: "Connector setup is done by exactly the people whose credentials should never be delegated — admins, because only they can. Nobody re-checks what the resulting integration can actually do."
+  },
+  {
+    id: "guardrail-drift", sev: "warning",
+    when: s => s.ctrl.includes("ai_guardrails") && s.ai.length > 0 && !s.ctrl.includes("it_testing") && !s.ctrl.includes("fin_testing"),
+    title: "Your guardrails were correct on the day you configured them",
+    body: "Technical guardrails — gateways, tool allowlists, approval gates, output filters — are a real control, a level above policy. But a guardrail is configuration frozen at deployment time, aimed at a target that doesn't hold still: models update, new connectors get added, agent capabilities jump, and users find workflows nobody anticipated. A ruleset that fully covered your agents in January quietly covers less of them by June, while the checkbox saying \"we have guardrails\" stays checked. Unrevalidated guardrails become the enterprise version of \"the connector is read-only\" — a true statement about the past, cited as safety in the present.",
+    why: "The control isn't the guardrail; it's the recurring test that proves the guardrail still holds against what your agents can do now. Put guardrail re-validation on a schedule tied to model and connector changes, not the calendar alone — and log each run, because in a post-incident review \"configured once, never re-tested\" reads exactly like an untested policy."
   },
   {
     id: "policy-theater", sev: "warning",
