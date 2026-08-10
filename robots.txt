@@ -1,0 +1,42 @@
+# aiia-risk.com — all crawlers welcome, including AI assistants.
+# We publish exactly what we track about you at https://aiia-risk.com/stats.html
+# Machine-readable site overview for LLMs: https://aiia-risk.com/llms.txt
+
+User-agent: *
+Allow: /
+
+# AI / LLM crawlers — explicitly welcome
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: meta-externalagent
+Allow: /
+
+Sitemap: https://aiia-risk.com/sitemap.xml
