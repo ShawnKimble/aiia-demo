@@ -1,0 +1,42 @@
+name: traffic-data
+
+# Pulls visit stats from GoatCounter's authenticated API (read-only token in
+# secrets.GOATCOUNTER_TOKEN) and commits data/daily.json, which stats.html
+# fetches on every page load. Why this exists: GoatCounter's public counter
+# endpoint cannot serve per-day history (past-day ranges 404), so the page
+# cannot fetch daily data directly from a visitor's browser.
+
+on:
+  schedule:
+    - cron: '23 * * * *'   # hourly at :23 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: traffic-data
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch stats from GoatCounter API
+        env:
+          GC_TOKEN: ${{ secrets.GOATCOUNTER_TOKEN }}
+        run: python3 scripts/fetch_traffic.py
+
+      - name: Commit if changed
+        run: |
+          git config user.name "aiia-traffic-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/daily.json
+          if git diff --cached --quiet; then
+            echo "No change in data/daily.json — nothing to commit."
+          else
+            git commit -m "traffic: refresh data/daily.json"
+            git push
+          fi
