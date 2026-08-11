@@ -23,10 +23,11 @@ SITE = "https://aiia-risk.goatcounter.com"
 LAUNCH = "2026-08-08"  # site went live; earlier days are hard zeros
 ET = ZoneInfo("America/New_York")
 
-TOKEN = os.environ.get("GC_TOKEN", "")
+TOKEN = os.environ.get("GC_TOKEN", "").strip()
 if not TOKEN:
-    print("ERROR: GC_TOKEN not set", file=sys.stderr)
+    print("ERROR: GC_TOKEN not set or empty", file=sys.stderr)
     sys.exit(1)
+print(f"Token present: {len(TOKEN)} chars (value not logged)")
 
 
 def api(path, **params):
@@ -36,8 +37,17 @@ def api(path, **params):
         "Authorization": f"Bearer {TOKEN}",
         "Content-Type": "application/json",
     })
-    with urllib.request.urlopen(req, timeout=30) as r:
-        return json.loads(r.read().decode())
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r:
+            return json.loads(r.read().decode())
+    except urllib.error.HTTPError as e:
+        body = ""
+        try:
+            body = e.read().decode()[:500]
+        except Exception:
+            pass
+        print(f"API ERROR {e.code} on {path}: {body}", file=sys.stderr)
+        raise
 
 
 def day_visits(day_str):
