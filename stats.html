@@ -177,7 +177,7 @@
       <div class="sub2">a visit = one person's session; repeat loads within ~8 hours count once</div>
     </div>
     <div class="tiles">
-      <div class="tile"><div class="lbl">Today</div><div class="val" id="v-today">–</div></div>
+      <div class="tile"><div class="lbl" id="lbl-today">Today</div><div class="val" id="v-today">–</div></div>
       <div class="tile"><div class="lbl">Last 7 days</div><div class="val" id="v-week">–</div></div>
       <div class="tile"><div class="lbl">Last 30 days</div><div class="val" id="v-month">–</div></div>
     </div>
@@ -196,7 +196,7 @@
         <div id="dev"></div>
       </div>
     </div>
-    <p class="body" style="margin-top:10px;margin-bottom:0" class="asof">These aggregate breakdowns come from our GoatCounter dashboard and are updated periodically by hand — the visit counts above are live.</p>
+    <p class="body" style="margin-top:10px;margin-bottom:0" class="asof">These aggregate breakdowns come from our GoatCounter dashboard and are updated periodically by hand — the all-time total above is live.</p>
   </div>
 
   <div class="card">
@@ -227,22 +227,30 @@
   <div>268 Post Rd Ste 200 PMB 168359, Fairfield, CT 06824-6220</div>
   <div>Contact: <a href="mailto:consultation@aiia-risk.com" style="color:var(--accent-ink)">consultation@aiia-risk.com</a> · <a href="./" style="color:var(--accent-ink)">Risk triage</a> · <a href="about.html" style="color:var(--accent-ink)">About the founder</a> · <a href="stats.html" style="color:var(--accent-ink)">What we track</a> · <a href="mistakes.html" style="color:var(--accent-ink)">Where we messed up</a></div>
   <div style="margin-top:8px">© 2026 Artificial Intelligence Internal Audit Risk, LLC. Informational only; not an audit, security assessment, or legal advice, and no engagement or duty of care is created.</div>
-  <div style="margin-top:8px;opacity:.55;font-size:11px" title="Build version — stats">v0.17 · stats (seo/ai-pickup) · 2026-08-10</div>
+  <div style="margin-top:8px;opacity:.55;font-size:11px" title="Build version — stats">v0.19.1 · stats (daily breakdown) · 2026-08-10</div>
 </footer>
 
 <script>
 const SITE = "https://aiia-risk.goatcounter.com";
 const $ = id => document.getElementById(id);
 
-// Aggregate breakdowns (dashboard export — visit counts above are live).
+// Aggregate breakdowns + daily series (dashboard export, hand-synced — the all-time total above is live).
+// Note: GoatCounter's public counter API can't serve per-day history (past-day ranges 404),
+// so the daily bars are synced by hand from the dashboard rather than half-fetched live.
 const BREAKDOWN = {
-  asOf: "Aug 9, 2026",
+  asOf: "Aug 10, 2026 (evening ET)",
+  total: 72, // fallback if the live fetch fails
+  daily: [ // oldest → newest; site went live Aug 8
+    { d: "Aug 4", n: 0 }, { d: "Aug 5", n: 0 }, { d: "Aug 6", n: 0 },
+    { d: "Aug 7", n: 0 }, { d: "Aug 8", n: 8 }, { d: "Aug 9", n: 43 },
+    { d: "Aug 10", n: 21, partial: true }
+  ],
   geo: [
-    { name: "United States", n: 21 }, { name: "France", n: 2 }, { name: "Netherlands", n: 2 },
-    { name: "UK", n: 1 }, { name: "Ireland", n: 1 }, { name: "Singapore", n: 1 }
+    { name: "United States", n: 48 }, { name: "France", n: 8 }, { name: "Netherlands", n: 4 },
+    { name: "UK", n: 3 }, { name: "Canada", n: 2 }, { name: "Singapore", n: 2 }
   ],
   dev: [
-    { name: "Computers", n: 14 }, { name: "Phones", n: 7 }, { name: "Tablets", n: 7 }
+    { name: "Computers", n: 38 }, { name: "Phones", n: 17 }, { name: "Tablets", n: 15 }
   ]
 };
 
@@ -287,44 +295,43 @@ hbars($("dev"), BREAKDOWN.dev);
 $("asof-geo").textContent = "(as of " + BREAKDOWN.asOf + ")";
 $("asof-dev").textContent = "(as of " + BREAKDOWN.asOf + ")";
 
-(async function loadCounts() {
-  const now = new Date();
-  const daysAgo = n => { const d = new Date(now); d.setDate(d.getDate() - n); return d; };
-  try {
-    const [total, today, week, month] = await Promise.all([
-      getJSON(SITE + "/counter/TOTAL.json?nc=" + Date.now()).then(parseCount),
-      getCount({ start: fmtDate(now) }),
-      getCount({ start: fmtDate(daysAgo(6)) }),
-      getCount({ start: fmtDate(daysAgo(29)) }),
-    ]);
-    $("v-total").textContent = compact(total);
-    $("v-today").textContent = compact(today);
-    $("v-week").textContent = compact(week);
-    $("v-month").textContent = compact(month);
+// Daily bars + day tiles render from the hand-synced BREAKDOWN (see note above on why),
+// so the chart is always complete. Only the all-time total is fetched live.
+(function renderDaily() {
+  const daily = BREAKDOWN.daily;
+  const last = daily[daily.length - 1];
+  $("lbl-today").textContent = last.d + (last.partial ? " (so far)" : "");
+  $("v-today").textContent = compact(last.n);
+  const week = daily.reduce((s, x) => s + x.n, 0);
+  $("v-week").textContent = compact(week);
+  $("v-month").textContent = compact(BREAKDOWN.total); // site is <30 days old; all-time = last 30
+  const max = Math.max(1, ...daily.map(x => x.n));
+  const spark = $("spark");
+  spark.innerHTML = "";
+  daily.forEach(x => {
+    const col = document.createElement("div"); col.className = "col";
+    const slot = document.createElement("div"); slot.className = "bar-slot";
+    const bar = document.createElement("div"); bar.className = "bar";
+    bar.style.height = Math.max(3, Math.round(x.n / max * 58)) + "px";
+    if (x.n === 0) { bar.style.background = "var(--surface-3)"; bar.style.border = "1px solid rgba(91,70,50,.25)"; }
+    slot.appendChild(bar);
+    const num = document.createElement("div"); num.className = "num"; num.textContent = x.n;
+    const day = document.createElement("div"); day.className = "day"; day.textContent = x.d;
+    col.title = x.d + ": " + x.n + " visit" + (x.n === 1 ? "" : "s");
+    col.appendChild(num); col.appendChild(slot); col.appendChild(day);
+    spark.appendChild(col);
+  });
+})();
 
-    const days = [];
-    for (let i = 6; i >= 0; i--) days.push(daysAgo(i));
-    const counts = await Promise.all(days.map(d =>
-      getCount({ start: fmtDate(d), end: fmtDate(d) }).catch(() => 0)));
-    const max = Math.max(1, ...counts);
-    const spark = $("spark");
-    spark.innerHTML = "";
-    days.forEach((d, i) => {
-      const col = document.createElement("div"); col.className = "col";
-      const slot = document.createElement("div"); slot.className = "bar-slot";
-      const bar = document.createElement("div"); bar.className = "bar";
-      bar.style.height = Math.max(3, Math.round(counts[i] / max * 58)) + "px";
-      if (counts[i] === 0) { bar.style.background = "var(--surface-3)"; bar.style.border = "1px solid rgba(91,70,50,.25)"; }
-      slot.appendChild(bar);
-      const num = document.createElement("div"); num.className = "num"; num.textContent = counts[i];
-      const day = document.createElement("div"); day.className = "day"; day.textContent = d.toLocaleDateString(undefined, {month:"short", day:"numeric"});
-      col.title = fmtDate(d) + ": " + counts[i] + " visit" + (counts[i] === 1 ? "" : "s");
-      col.appendChild(num); col.appendChild(slot); col.appendChild(day);
-      spark.appendChild(col);
-    });
-    $("status").textContent = "Live from GoatCounter's public endpoint — fetched by your browser just now. Counts can lag a few hours behind the private dashboard.";
+(async function loadTotal() {
+  $("v-total").textContent = compact(BREAKDOWN.total);
+  $("status").textContent = "Daily bars hand-synced from our GoatCounter dashboard as of " + BREAKDOWN.asOf + ". Fetching the live all-time total…";
+  try {
+    const total = await getJSON(SITE + "/counter/TOTAL.json?nc=" + Date.now()).then(parseCount);
+    if (total >= BREAKDOWN.total) $("v-total").textContent = compact(total);
+    $("status").textContent = "All-time total is live from GoatCounter's public endpoint (can lag a few hours). Daily bars and day tiles are hand-synced from the dashboard — last synced " + BREAKDOWN.asOf + ".";
   } catch (e) {
-    $("status").textContent = "Couldn't load live counts (" + e.message + ") — the endpoint above still works from any browser or curl.";
+    $("status").textContent = "Couldn't fetch the live total (" + e.message + ") — showing the " + BREAKDOWN.asOf + " sync. The endpoint above still works from any browser or curl.";
   }
 })();
 </script>
