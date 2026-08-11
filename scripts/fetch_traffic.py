@@ -1,21 +1,25 @@
 #!/usr/bin/env python3
-"""Fetch per-day visit counts from GoatCounter's authenticated API and write
+"""Fetch per-day VISIT counts from GoatCounter's authenticated API and write
 data/daily.json for stats.html to consume.
 
-Runs inside GitHub Actions (see .github/workflows/traffic.yml). The read-only
-API token lives in the GOATCOUNTER_TOKEN secret and never leaves the runner.
+Runs inside GitHub Actions (.github/workflows/traffic.yml); read-only token in
+the GOATCOUNTER_TOKEN secret.
 
-Notes on the API (learned 2026-08-10/11):
-- The PUBLIC counter endpoint (/counter/*.json) 404s on past-day ranges and
-  lags; it is useless for this. Only the authenticated /api/v0 works.
-- The dashboard's headline number is VISITS (sessions), not pageviews. We try
-  several response fields and log which one we used so a human can verify the
-  first run against the dashboard.
+API notes (learned the hard way, 2026-08-11):
+- /api/v0/stats/total counts PAGEVIEWS; the dashboard headline is VISITS.
+  Visits = sum of per-path "count" from /api/v0/stats/hits (verified: dashboard
+  72 = 58+6+3+2+1+1+1 across paths).
+- start/end are date-time values "rounded to the hour", not bare dates
+  (bare dates 404). We probe a few accepted formats and use the first that
+  works, logging the choice.
+- The site dashboard displays days in America/New_York; we query ET day
+  boundaries so our numbers match what the dashboard shows.
 """
 import json
 import os
 import sys
 import urllib.request
+import urllib.error
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
@@ -30,75 +34,97 @@ if not TOKEN:
 print(f"Token present: {len(TOKEN)} chars (value not logged)")
 
 
-def api(path, **params):
-    q = "&".join(f"{k}={v}" for k, v in params.items())
-    url = f"{SITE}/api/v0{path}?{q}" if q else f"{SITE}/api/v0{path}"
+def api_raw(path, query):
+    url = f"{SITE}/api/v0{path}?{query}"
     req = urllib.request.Request(url, headers={
         "Authorization": f"Bearer {TOKEN}",
         "Content-Type": "application/json",
     })
-    try:
-        with urllib.request.urlopen(req, timeout=30) as r:
-            return json.loads(r.read().decode())
-    except urllib.error.HTTPError as e:
-        body = ""
+    with urllib.request.urlopen(req, timeout=30) as r:
+        return json.loads(r.read().decode())
+
+
+def fmt_candidates(dt):
+    """Different renderings of a datetime the API might accept."""
+    return [
+        ("rfc3339-z", dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")),
+        ("space-utc", dt.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")),
+        ("rfc3339-offset", dt.strftime("%Y-%m-%dT%H:%M:%S%z")),
+    ]
+
+
+CHOSEN_FMT = None
+
+
+def hits_for_range(start_dt, end_dt):
+    """Return (visits_sum, per_path_debug) for a datetime range, probing
+    accepted time formats on first use."""
+    global CHOSEN_FMT
+    from urllib.parse import quote
+    fmts = [CHOSEN_FMT] if CHOSEN_FMT else [f[0] for f in fmt_candidates(start_dt)]
+    last_err = None
+    for name in fmts:
+        s = dict(fmt_candidates(start_dt))[name]
+        e = dict(fmt_candidates(end_dt))[name]
+        q = f"start={quote(s)}&end={quote(e)}&limit=100"
         try:
-            body = e.read().decode()[:500]
-        except Exception:
-            pass
-        print(f"API ERROR {e.code} on {path}: {body}", file=sys.stderr)
-        raise
+            resp = api_raw("/stats/hits", q)
+            if CHOSEN_FMT is None:
+                CHOSEN_FMT = name
+                print(f"Time format accepted: {name}")
+            hits = resp.get("hits", [])
+            total = sum(h.get("count", 0) for h in hits)
+            if resp.get("more"):
+                print("WARNING: hits paginated (more=true); sum may be low", file=sys.stderr)
+            dbg = [{"path": h.get("path"), "count": h.get("count")} for h in hits[:15]]
+            return total, dbg
+        except urllib.error.HTTPError as ex:
+            body = ""
+            try:
+                body = ex.read().decode()[:300]
+            except Exception:
+                pass
+            last_err = f"{name}: HTTP {ex.code} {body}"
+            print(f"format {name} rejected -> {last_err}", file=sys.stderr)
+    raise RuntimeError(f"All time formats rejected. Last: {last_err}")
 
 
-def day_visits(day_str):
-    """Return (visits, debug) for one calendar day."""
-    resp = api("/stats/total", start=day_str, end=day_str)
-    # Try likely field names in preference order; log the raw shape so the
-    # first run can be human-verified against the dashboard.
-    for key in ("visits", "total_unique", "total_utc", "total"):
-        if isinstance(resp, dict) and key in resp and isinstance(resp[key], int):
-            return resp[key], {"day": day_str, "used": key, "raw": resp}
-    return 0, {"day": day_str, "used": None, "raw": resp}
+def et_day_bounds(d):
+    start = datetime(d.year, d.month, d.day, 0, 0, 0, tzinfo=ET)
+    end = datetime(d.year, d.month, d.day, 23, 59, 59, tzinfo=ET)
+    return start, end
 
 
 def main():
-    today_et = datetime.now(ET).date()
-    days = [today_et - timedelta(days=i) for i in range(6, -1, -1)]
+    now_et = datetime.now(ET)
+    today = now_et.date()
+    days = [today - timedelta(days=i) for i in range(6, -1, -1)]
 
     daily = []
-    debugs = []
     for d in days:
         ds = d.isoformat()
         if ds < LAUNCH:
-            n = 0
-            debugs.append({"day": ds, "used": "pre-launch zero"})
+            n, dbg = 0, "pre-launch"
         else:
-            n, dbg = day_visits(ds)
-            debugs.append(dbg)
+            s, e = et_day_bounds(d)
+            n, dbg = hits_for_range(s, e)
         daily.append({
             "date": ds,
             "label": d.strftime("%b %-d"),
             "n": n,
-            "partial": ds == today_et.isoformat(),
+            "partial": ds == today.isoformat(),
         })
+        print(f"{ds}: {n} visits  {dbg}")
 
-    total_resp = api("/stats/total", start=LAUNCH, end=today_et.isoformat())
-    total = None
-    for key in ("visits", "total_unique", "total_utc", "total"):
-        if isinstance(total_resp, dict) and isinstance(total_resp.get(key), int):
-            total = total_resp[key]
-            total_key = key
-            break
-    if total is None:
-        print("ERROR: could not find a total field. Raw:", json.dumps(total_resp)[:2000], file=sys.stderr)
-        sys.exit(1)
+    launch_start = datetime(2026, 8, 8, 0, 0, 0, tzinfo=ET)
+    total, tdbg = hits_for_range(launch_start, now_et)
+    print(f"all-time total: {total} visits  {tdbg}")
 
     out = {
         "updated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "updated_et": datetime.now(ET).strftime("%b %-d, %Y %-I:%M %p ET"),
+        "updated_et": now_et.strftime("%b %-d, %Y %-I:%M %p ET"),
         "tz": "America/New_York",
-        "source": "GoatCounter authenticated API via GitHub Action (hourly)",
-        "field_used": total_key,
+        "source": "GoatCounter authenticated API (visits via /stats/hits) — GitHub Action, hourly",
         "total": total,
         "daily": daily,
     }
@@ -107,12 +133,8 @@ def main():
     with open("data/daily.json", "w") as f:
         json.dump(out, f, indent=2)
         f.write("\n")
-
-    # ---- log for human verification (first run especially) ----
     print("Wrote data/daily.json")
     print(json.dumps(out, indent=2))
-    print("\n--- field-selection debug (compare against dashboard!) ---")
-    print(json.dumps(debugs, indent=2, default=str)[:6000])
 
 
 if __name__ == "__main__":
