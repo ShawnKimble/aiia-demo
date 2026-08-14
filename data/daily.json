@@ -1,9 +1,9 @@
 {
-  "updated": "2026-08-14T20:49:07Z",
-  "updated_et": "Aug 14, 2026 4:49 PM ET",
+  "updated": "2026-08-14T22:43:26Z",
+  "updated_et": "Aug 14, 2026 6:43 PM ET",
   "tz": "America/New_York",
   "source": "GoatCounter authenticated API (visits via /stats/hits) \u2014 GitHub Action, hourly",
-  "total": 106,
+  "total": 107,
   "daily": [
     {
       "date": "2026-08-08",
@@ -44,7 +44,7 @@
     {
       "date": "2026-08-14",
       "label": "Aug 14",
-      "n": 4,
+      "n": 5,
       "partial": true
     }
   ]
