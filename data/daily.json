@@ -1,16 +1,10 @@
 {
-  "updated": "2026-09-24T22:28:59Z",
-  "updated_et": "Sep 24, 2026 6:28 PM ET",
+  "updated": "2026-09-25T07:56:36Z",
+  "updated_et": "Sep 25, 2026 3:56 AM ET",
   "tz": "America/New_York",
   "source": "GoatCounter authenticated API (visits via /stats/hits) \u2014 GitHub Action, hourly",
   "total": 146,
   "daily": [
-    {
-      "date": "2026-09-18",
-      "label": "Sep 18",
-      "n": 0,
-      "partial": false
-    },
     {
       "date": "2026-09-19",
       "label": "Sep 19",
@@ -44,6 +38,12 @@
     {
       "date": "2026-09-24",
       "label": "Sep 24",
+      "n": 0,
+      "partial": false
+    },
+    {
+      "date": "2026-09-25",
+      "label": "Sep 25",
       "n": 0,
       "partial": true
     }
